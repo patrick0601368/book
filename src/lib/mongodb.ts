@@ -6,6 +6,10 @@ if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable inside .env.local')
 }
 
+declare global {
+  var mongoose: any
+}
+
 let cached = global.mongoose
 
 if (!cached) {
