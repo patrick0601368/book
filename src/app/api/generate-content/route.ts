@@ -3,13 +3,8 @@ import OpenAI from 'openai'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
-
 // Mistral AI configuration
 const MISTRAL_API_URL = 'https://api.mistral.ai/v1/chat/completions'
-const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,7 +57,8 @@ export async function POST(request: NextRequest) {
 
     if (provider === 'mistral') {
       // Use Mistral AI
-      if (!MISTRAL_API_KEY) {
+      const mistralApiKey = process.env.MISTRAL_API_KEY
+      if (!mistralApiKey) {
         return NextResponse.json({ error: 'Mistral API key not configured' }, { status: 500 })
       }
 
@@ -70,7 +66,7 @@ export async function POST(request: NextRequest) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${MISTRAL_API_KEY}`,
+          'Authorization': `Bearer ${mistralApiKey}`,
         },
         body: JSON.stringify({
           model: 'mistral-large-latest',
@@ -97,9 +93,14 @@ export async function POST(request: NextRequest) {
       content = mistralData.choices[0]?.message?.content || ''
     } else {
       // Use OpenAI (default)
-      if (!process.env.OPENAI_API_KEY) {
+      const openaiApiKey = process.env.OPENAI_API_KEY
+      if (!openaiApiKey) {
         return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 })
       }
+
+      const openai = new OpenAI({
+        apiKey: openaiApiKey,
+      })
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4",
