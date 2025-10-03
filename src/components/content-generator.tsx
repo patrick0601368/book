@@ -13,10 +13,12 @@ export function ContentGenerator() {
     subject: '',
     topic: '',
     difficulty: 'beginner',
-    type: 'learning-page'
+    type: 'learning-page',
+    provider: 'openai'
   })
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedContent, setGeneratedContent] = useState('')
+  const [selectedProvider, setSelectedProvider] = useState('openai')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,6 +39,7 @@ export function ContentGenerator() {
 
       const data = await response.json()
       setGeneratedContent(data.content)
+      setSelectedProvider(data.provider || formData.provider)
     } catch (error) {
       console.error('Error generating content:', error)
     } finally {
@@ -81,7 +84,7 @@ export function ContentGenerator() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="difficulty">Difficulty Level</Label>
                 <Select
@@ -114,6 +117,21 @@ export function ContentGenerator() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label htmlFor="provider">AI Provider</Label>
+                <Select
+                  value={formData.provider}
+                  onValueChange={(value) => setFormData({ ...formData, provider: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="openai">OpenAI (GPT-4)</SelectItem>
+                    <SelectItem value="mistral">Mistral AI</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <Button type="submit" disabled={isGenerating} className="w-full">
@@ -136,7 +154,12 @@ export function ContentGenerator() {
       {generatedContent && (
         <Card>
           <CardHeader>
-            <CardTitle>Generated Content</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              <span>Generated Content</span>
+              <span className="text-sm font-normal text-gray-500">
+                Powered by {selectedProvider === 'mistral' ? 'Mistral AI' : 'OpenAI GPT-4'}
+              </span>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="prose max-w-none">

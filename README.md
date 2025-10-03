@@ -18,7 +18,7 @@ An AI-powered learning platform that creates personalized learning pages, exerci
 - **Styling**: Tailwind CSS, Radix UI
 - **Authentication**: NextAuth.js with Email/Password
 - **Database**: MongoDB with Mongoose
-- **AI Integration**: OpenAI GPT-4 API
+- **AI Integration**: OpenAI GPT-4 and Mistral AI
 - **Deployment**: Vercel (Frontend), Render (Backend), MongoDB Atlas
 
 ## Getting Started
@@ -27,7 +27,8 @@ An AI-powered learning platform that creates personalized learning pages, exerci
 
 - Node.js 18+ 
 - MongoDB Atlas account
-- OpenAI API key
+- OpenAI API key (optional)
+- Mistral AI API key (optional)
 
 ### Installation
 
@@ -51,7 +52,8 @@ cp env.example .env.local
    - `MONGODB_URI`: Your MongoDB Atlas connection string
    - `NEXTAUTH_URL`: Your application URL (http://localhost:3000 for development)
    - `NEXTAUTH_SECRET`: A random secret key
-   - `OPENAI_API_KEY`: Your OpenAI API key
+   - `OPENAI_API_KEY`: Your OpenAI API key (optional)
+   - `MISTRAL_API_KEY`: Your Mistral AI API key (optional)
 
 5. Run the development server:
 ```bash
@@ -88,7 +90,8 @@ npm run dev
 | `MONGODB_URI` | MongoDB Atlas connection string | Yes |
 | `NEXTAUTH_URL` | Application URL | Yes |
 | `NEXTAUTH_SECRET` | Secret key for NextAuth | Yes |
-| `OPENAI_API_KEY` | OpenAI API key | Yes |
+| `OPENAI_API_KEY` | OpenAI API key | No (at least one AI provider required) |
+| `MISTRAL_API_KEY` | Mistral AI API key | No (at least one AI provider required) |
 
 ## Project Structure
 
