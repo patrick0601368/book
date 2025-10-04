@@ -40,6 +40,7 @@ export default function SignUp() {
 
     try {
       console.log('Attempting to register user:', { name, email })
+      console.log('API Base URL:', process.env.NEXT_PUBLIC_API_URL || 'https://bookcreation.onrender.com')
 
       const response = await apiClient.register({
         name,
@@ -52,6 +53,11 @@ export default function SignUp() {
       router.push('/auth/signin?message=Registration successful! Please sign in.')
     } catch (error) {
       console.error('Registration error:', error)
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      })
+      
       if (error instanceof Error) {
         setError(error.message)
       } else {
