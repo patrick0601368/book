@@ -1,5 +1,5 @@
 // API configuration for Render backend
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://learning-platform-backend.onrender.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://bookcreation.onrender.com';
 
 export class ApiClient {
   private baseUrl: string;
