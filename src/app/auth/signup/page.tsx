@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import Link from 'next/link'
 import { BookOpen, Loader2 } from 'lucide-react'
+import { apiClient } from '@/lib/api'
 
 export default function SignUp() {
   const [name, setName] = useState('')
@@ -40,41 +40,20 @@ export default function SignUp() {
 
     try {
       console.log('Attempting to register user:', { name, email })
-      
-        // Create AbortController for timeout
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
 
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-        }),
-        signal: controller.signal,
+      const response = await apiClient.register({
+        name,
+        email,
+        password,
       })
 
-      clearTimeout(timeoutId)
-
-      console.log('Registration response status:', response.status)
-      
-      if (response.ok) {
-        console.log('Registration successful, redirecting to sign in')
-        // Registration successful, redirect to sign in
-        router.push('/auth/signin?message=Registration successful! Please sign in.')
-      } else {
-        const data = await response.json()
-        console.error('Registration failed:', data)
-        setError(data.message || 'Registration failed')
-      }
+      console.log('Registration successful:', response)
+      // Registration successful, redirect to sign in
+      router.push('/auth/signin?message=Registration successful! Please sign in.')
     } catch (error) {
       console.error('Registration error:', error)
-      if (error instanceof Error && error.name === 'AbortError') {
-        setError('Request timed out. Please check your connection and try again.')
+      if (error instanceof Error) {
+        setError(error.message)
       } else {
         setError('An error occurred. Please try again.')
       }

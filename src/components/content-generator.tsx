@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Sparkles } from 'lucide-react'
+import { apiClient } from '@/lib/api'
 
 export function ContentGenerator() {
   const [formData, setFormData] = useState({
@@ -25,19 +26,7 @@ export function ContentGenerator() {
     setIsGenerating(true)
 
     try {
-      const response = await fetch('/api/generate-content', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to generate content')
-      }
-
-      const data = await response.json()
+      const data = await apiClient.generateContent(formData)
       setGeneratedContent(data.content)
       setSelectedProvider(data.provider || formData.provider)
     } catch (error) {

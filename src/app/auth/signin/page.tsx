@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { signIn, getSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import Link from 'next/link'
 import { BookOpen, Loader2 } from 'lucide-react'
+import { apiClient } from '@/lib/api'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
@@ -33,23 +33,16 @@ export default function SignIn() {
     setError('')
 
     try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        setError('Invalid email or password')
-      } else {
-        // Get the updated session
-        const session = await getSession()
-        if (session) {
-          router.push('/dashboard')
-        }
-      }
+      const response = await apiClient.login({ email, password })
+      console.log('Login successful:', response)
+      router.push('/dashboard')
     } catch (error) {
-      setError('An error occurred. Please try again.')
+      console.error('Login error:', error)
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('Sign in failed. Please check your credentials.')
+      }
     } finally {
       setIsLoading(false)
     }
