@@ -7,8 +7,15 @@ import { User, LogOut, BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import { apiClient } from '@/lib/api'
 
+interface User {
+  _id: string
+  name: string
+  email: string
+  image?: string
+}
+
 export function Navbar() {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 

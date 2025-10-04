@@ -7,8 +7,15 @@ import { DashboardStats } from '@/components/dashboard-stats'
 import { RecentContent } from '@/components/recent-content'
 import { apiClient } from '@/lib/api'
 
+interface User {
+  _id: string
+  name: string
+  email: string
+  image?: string
+}
+
 export default function Dashboard() {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
