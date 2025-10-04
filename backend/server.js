@@ -18,12 +18,14 @@ app.use(express.json());
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 10000, // 10 second timeout
+      socketTimeoutMS: 45000, // 45 second timeout
+      connectTimeoutMS: 10000, // 10 second timeout
     });
     console.log('MongoDB connected successfully');
   } catch (error) {
     console.error('MongoDB connection failed:', error);
+    console.error('Please check your MongoDB Atlas IP whitelist settings');
     process.exit(1);
   }
 };
