@@ -39,6 +39,12 @@ export default function SignUp() {
     }
 
     try {
+      console.log('Attempting to register user:', { name, email })
+      
+      // Create AbortController for timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -49,17 +55,29 @@ export default function SignUp() {
           email,
           password,
         }),
+        signal: controller.signal,
       })
 
+      clearTimeout(timeoutId)
+
+      console.log('Registration response status:', response.status)
+      
       if (response.ok) {
+        console.log('Registration successful, redirecting to sign in')
         // Registration successful, redirect to sign in
         router.push('/auth/signin?message=Registration successful! Please sign in.')
       } else {
         const data = await response.json()
+        console.error('Registration failed:', data)
         setError(data.message || 'Registration failed')
       }
     } catch (error) {
-      setError('An error occurred. Please try again.')
+      console.error('Registration error:', error)
+      if (error instanceof Error && error.name === 'AbortError') {
+        setError('Request timed out. Please check your connection and try again.')
+      } else {
+        setError('An error occurred. Please try again.')
+      }
     } finally {
       setIsLoading(false)
     }
