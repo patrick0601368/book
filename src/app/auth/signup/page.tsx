@@ -42,6 +42,20 @@ export default function SignUp() {
       console.log('Attempting to register user:', { name, email })
       console.log('API Base URL:', process.env.NEXT_PUBLIC_API_URL || 'https://bookcreation.onrender.com')
 
+      // Test backend health first
+      try {
+        const healthResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://bookcreation.onrender.com'}/health`)
+        console.log('Backend health check:', healthResponse.status)
+        if (!healthResponse.ok) {
+          throw new Error(`Backend health check failed: ${healthResponse.status}`)
+        }
+      } catch (healthError) {
+        console.error('Backend health check failed:', healthError)
+        setError('Backend is not accessible. Please check if the service is running.')
+        setIsLoading(false)
+        return
+      }
+
       const response = await apiClient.register({
         name,
         email,
