@@ -52,18 +52,8 @@ export default function SignUp() {
       })
 
       if (response.ok) {
-        // Auto sign in after successful registration
-        const result = await signIn('credentials', {
-          email,
-          password,
-          redirect: false,
-        })
-
-        if (result?.ok) {
-          router.push('/dashboard')
-        } else {
-          setError('Registration successful, but automatic sign-in failed. Please sign in manually.')
-        }
+        // Registration successful, redirect to sign in
+        router.push('/auth/signin?message=Registration successful! Please sign in.')
       } else {
         const data = await response.json()
         setError(data.message || 'Registration failed')
