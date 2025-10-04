@@ -19,7 +19,7 @@ if (!cached) {
 async function dbConnect() {
   console.log('Attempting to connect to MongoDB...')
   console.log('MongoDB URI exists:', !!MONGODB_URI)
-  
+
   if (cached.conn) {
     console.log('Using cached MongoDB connection')
     return cached.conn
@@ -29,6 +29,9 @@ async function dbConnect() {
     console.log('Creating new MongoDB connection...')
     const opts = {
       bufferCommands: false,
+      serverSelectionTimeoutMS: 5000, // 5 second timeout
+      socketTimeoutMS: 45000, // 45 second timeout
+      connectTimeoutMS: 10000, // 10 second timeout
     }
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {

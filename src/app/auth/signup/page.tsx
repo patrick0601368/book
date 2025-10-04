@@ -41,9 +41,9 @@ export default function SignUp() {
     try {
       console.log('Attempting to register user:', { name, email })
       
-      // Create AbortController for timeout
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+        // Create AbortController for timeout
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
 
       const response = await fetch('/api/auth/register', {
         method: 'POST',
