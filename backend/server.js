@@ -10,8 +10,17 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors());
+// Middleware - Configure CORS to allow Vercel frontend
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',
+    'https://book-9l3z.vercel.app',
+    /\.vercel\.app$/  // Allow all Vercel preview URLs
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // MongoDB Connection

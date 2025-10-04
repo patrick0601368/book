@@ -33,11 +33,33 @@ export default function SignIn() {
     setError('')
 
     try {
+      console.log('Attempting login for:', email)
+      console.log('API Base URL:', process.env.NEXT_PUBLIC_API_URL || 'https://bookcreation.onrender.com')
+
+      // Test backend health first
+      try {
+        const healthResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://bookcreation.onrender.com'}/health`)
+        console.log('Backend health check:', healthResponse.status)
+        if (!healthResponse.ok) {
+          throw new Error(`Backend health check failed: ${healthResponse.status}`)
+        }
+      } catch (healthError) {
+        console.error('Backend health check failed:', healthError)
+        setError('Backend is not accessible. Please check if the service is running.')
+        setIsLoading(false)
+        return
+      }
+
       const response = await apiClient.login({ email, password })
       console.log('Login successful:', response)
       router.push('/dashboard')
     } catch (error) {
       console.error('Login error:', error)
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      })
+
       if (error instanceof Error) {
         setError(error.message)
       } else {
