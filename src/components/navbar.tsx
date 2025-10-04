@@ -1,12 +1,39 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { User, LogOut, BookOpen } from 'lucide-react'
 import Link from 'next/link'
+import { apiClient } from '@/lib/api'
 
 export function Navbar() {
-  const { data: session, status } = useSession()
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (apiClient.isAuthenticated()) {
+        try {
+          const userData = await apiClient.getUserProfile()
+          setUser(userData)
+        } catch (error) {
+          console.error('Failed to get user profile:', error)
+          apiClient.clearToken()
+        }
+      }
+      setLoading(false)
+    }
+
+    checkAuth()
+  }, [])
+
+  const handleSignOut = () => {
+    apiClient.clearToken()
+    setUser(null)
+    router.push('/')
+  }
 
   return (
     <nav className="border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
@@ -20,9 +47,9 @@ export function Navbar() {
           </div>
           
           <div className="flex items-center space-x-4">
-            {status === 'loading' ? (
+            {loading ? (
               <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
-            ) : session ? (
+            ) : user ? (
               <div className="flex items-center space-x-4">
                 <Link href="/dashboard">
                   <Button variant="outline" size="sm">
@@ -32,13 +59,13 @@ export function Navbar() {
                 <div className="flex items-center space-x-2">
                   <User className="h-8 w-8 text-gray-600" />
                   <span className="text-sm font-medium text-gray-700">
-                    {session.user?.name}
+                    {user.name}
                   </span>
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => signOut()}
+                  onClick={handleSignOut}
                   className="flex items-center space-x-1"
                 >
                   <LogOut className="h-4 w-4" />
