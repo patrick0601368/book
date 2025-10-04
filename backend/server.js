@@ -242,20 +242,18 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
         prompt = `Create a ${difficulty} level exercise about "${topic}" in the subject of "${subject}".
         Include:
         - A clear question/problem
-        - Step-by-step solution
-        - Explanation of the reasoning
+        - DO NOT include the solution
         Format as markdown.`;
         break;
 
-      case 'solution-path':
-        prompt = `Create a detailed solution path for learning "${topic}" in the subject of "${subject}".
-        Difficulty: ${difficulty}.
+      case 'exercise-with-solution':
+        prompt = `Create a ${difficulty} level exercise with complete solution path about "${topic}" in the subject of "${subject}".
         Include:
-        - Prerequisites
-        - Learning sequence
-        - Key milestones
-        - Practice recommendations
-        Format as a structured learning path.`;
+        - A clear question/problem
+        - Step-by-step solution path
+        - Detailed explanation of each step
+        - Key concepts and reasoning
+        Format as markdown with clear sections.`;
         break;
 
       default:

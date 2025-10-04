@@ -102,7 +102,7 @@ export function ContentGenerator() {
                   <SelectContent>
                     <SelectItem value="learning-page">Learning Page</SelectItem>
                     <SelectItem value="exercise">Exercise</SelectItem>
-                    <SelectItem value="solution-path">Solution Path</SelectItem>
+                    <SelectItem value="exercise-with-solution">Exercise with Solution Path</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
