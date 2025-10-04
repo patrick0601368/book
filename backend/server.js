@@ -222,7 +222,7 @@ app.post('/api/auth/login', async (req, res) => {
 // Generate content
 app.post('/api/generate-content', authenticateToken, async (req, res) => {
   try {
-    const { type, subject, topic, difficulty, provider = 'openai' } = req.body;
+    const { type, subject, topic, difficulty, provider = 'openai', customPrompt } = req.body;
 
     let prompt = '';
 
@@ -258,6 +258,11 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
 
       default:
         return res.status(400).json({ error: 'Invalid content type' });
+    }
+
+    // Add custom prompt if provided
+    if (customPrompt && customPrompt.trim()) {
+      prompt += `\n\nAdditional instructions: ${customPrompt}`;
     }
 
     let content = '';
@@ -336,6 +341,68 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Profile error:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Get all subjects for the user
+app.get('/api/subjects', authenticateToken, async (req, res) => {
+  try {
+    const subjects = await Subject.find({ userId: req.user.userId }).sort({ name: 1 });
+    res.json(subjects);
+  } catch (error) {
+    console.error('Error fetching subjects:', error);
+    res.status(500).json({ message: 'Failed to fetch subjects' });
+  }
+});
+
+// Create a new subject
+app.post('/api/subjects', authenticateToken, async (req, res) => {
+  try {
+    const { name, description } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'Subject name is required' });
+    }
+
+    // Check if subject already exists for this user
+    const existingSubject = await Subject.findOne({ 
+      name: name.trim(), 
+      userId: req.user.userId 
+    });
+
+    if (existingSubject) {
+      return res.status(400).json({ message: 'Subject already exists' });
+    }
+
+    const subject = await Subject.create({
+      name: name.trim(),
+      description: description || '',
+      userId: req.user.userId,
+    });
+
+    res.status(201).json(subject);
+  } catch (error) {
+    console.error('Error creating subject:', error);
+    res.status(500).json({ message: 'Failed to create subject' });
+  }
+});
+
+// Delete a subject
+app.delete('/api/subjects/:id', authenticateToken, async (req, res) => {
+  try {
+    const subject = await Subject.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user.userId
+    });
+
+    if (!subject) {
+      return res.status(404).json({ message: 'Subject not found' });
+    }
+
+    res.json({ message: 'Subject deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting subject:', error);
+    res.status(500).json({ message: 'Failed to delete subject' });
   }
 });
 

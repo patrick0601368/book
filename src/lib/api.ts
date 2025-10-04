@@ -84,6 +84,7 @@ export class ApiClient {
     topic: string;
     difficulty: string;
     provider?: string;
+    customPrompt?: string;
   }) {
     return this.request('/api/generate-content', {
       method: 'POST',
@@ -93,6 +94,24 @@ export class ApiClient {
 
   async getUserProfile() {
     return this.request('/api/user/profile');
+  }
+
+  // Subject management
+  async getSubjects() {
+    return this.request('/api/subjects');
+  }
+
+  async createSubject(data: { name: string; description?: string }) {
+    return this.request('/api/subjects', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteSubject(id: string) {
+    return this.request(`/api/subjects/${id}`, {
+      method: 'DELETE',
+    });
   }
 
   // Health checks
