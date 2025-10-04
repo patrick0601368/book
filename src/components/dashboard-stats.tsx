@@ -5,15 +5,15 @@ export function DashboardStats() {
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Learning Pages Created</span>
-          <span className="font-semibold">12</span>
+          <span className="font-semibold">0</span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Exercises Completed</span>
-          <span className="font-semibold">8</span>
+          <span className="font-semibold">0</span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Subjects Studied</span>
-          <span className="font-semibold">5</span>
+          <span className="font-semibold">0</span>
         </div>
       </div>
     </div>
