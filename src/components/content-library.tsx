@@ -405,7 +405,26 @@ export function ContentLibrary() {
               <div className="prose prose-lg max-w-none">
                 <ReactMarkdown
                   remarkPlugins={[remarkMath, remarkGfm]}
-                  rehypePlugins={[rehypeKatex]}
+                  rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]}
+                  components={{
+                    code: ({node, inline, className, children, ...props}) => {
+                      const isLatex = String(children).includes('\\') || String(children).includes('frac') || String(children).includes('sqrt')
+                      if (isLatex && !inline) {
+                        return <div>{children}</div>
+                      }
+                      return inline ? (
+                        <code className={className} {...props}>
+                          {children}
+                        </code>
+                      ) : (
+                        <pre>
+                          <code className={className} {...props}>
+                            {children}
+                          </code>
+                        </pre>
+                      )
+                    },
+                  }}
                 >
                   {convertLatexDelimiters(selectedContent.content)}
                 </ReactMarkdown>
