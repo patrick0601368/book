@@ -697,18 +697,18 @@ export function ContentGenerator() {
                     wrapperElement={{
                       "data-color-mode": "light"
                     }}
-                    rehypePlugins={[rehypeKatex]}
+                    rehypePlugins={[[rehypeKatex, { strict: false, output: 'html' }]]}
                     remarkPlugins={[remarkMath, remarkGfm]}
                     components={{
-                      h1: ({ children }) => <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginTop: '1.5rem', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>{children}</h1>,
-                      h2: ({ children }) => <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', marginTop: '1.25rem', marginBottom: '0.75rem', borderBottom: '1px solid #e5e7eb', paddingBottom: '0.25rem' }}>{children}</h2>,
-                      h3: ({ children }) => <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem' }}>{children}</h3>,
-                      p: ({ children }) => <p style={{ marginBottom: '1rem', lineHeight: '1.75' }}>{children}</p>,
-                      ul: ({ children }) => <ul style={{ listStyleType: 'disc', paddingLeft: '1.5rem', marginBottom: '1rem' }}>{children}</ul>,
-                      ol: ({ children }) => <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5rem', marginBottom: '1rem' }}>{children}</ol>,
-                      li: ({ children }) => <li style={{ marginBottom: '0.5rem' }}>{children}</li>,
-                      strong: ({ children }) => <strong style={{ fontWeight: '700', color: '#111827' }}>{children}</strong>,
-                      em: ({ children }) => <em style={{ fontStyle: 'italic' }}>{children}</em>,
+                      h1: ({ children, ...props }) => <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginTop: '1.5rem', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }} {...props}>{children}</h1>,
+                      h2: ({ children, ...props }) => <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', marginTop: '1.25rem', marginBottom: '0.75rem', borderBottom: '1px solid #e5e7eb', paddingBottom: '0.25rem' }} {...props}>{children}</h2>,
+                      h3: ({ children, ...props }) => <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem' }} {...props}>{children}</h3>,
+                      p: ({ children, ...props }) => <p style={{ marginBottom: '1rem', lineHeight: '1.75' }} {...props}>{children}</p>,
+                      ul: ({ children, ...props }) => <ul style={{ listStyleType: 'disc', paddingLeft: '1.5rem', marginBottom: '1rem' }} {...props}>{children}</ul>,
+                      ol: ({ children, ...props }) => <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5rem', marginBottom: '1rem' }} {...props}>{children}</ol>,
+                      li: ({ children, ...props }) => <li style={{ marginBottom: '0.5rem' }} {...props}>{children}</li>,
+                      strong: ({ children, ...props }) => <strong style={{ fontWeight: '700', color: '#111827' }} {...props}>{children}</strong>,
+                      em: ({ children, ...props }) => <em style={{ fontStyle: 'italic' }} {...props}>{children}</em>,
                     }}
                   />
                 </div>
