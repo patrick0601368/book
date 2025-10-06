@@ -74,10 +74,6 @@ export function DashboardStats() {
           <span className="text-sm text-gray-600">Exercises</span>
           <span className="font-semibold">{stats.exercises + stats.exercisesWithSolution}</span>
         </div>
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">Subjects Studied</span>
-          <span className="font-semibold">{stats.uniqueSubjects}</span>
-        </div>
       </div>
     </div>
   )
