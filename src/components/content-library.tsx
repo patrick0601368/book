@@ -88,10 +88,7 @@ export function ContentLibrary() {
       marked.setOptions({
         breaks: true,
         gfm: true,
-        headerIds: false,
-        mangle: false,
-        renderer: renderer,
-        pedantic: false
+        renderer: renderer
       })
       
       const html = marked.parse(content) as string
