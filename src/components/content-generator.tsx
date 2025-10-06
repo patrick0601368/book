@@ -81,14 +81,14 @@ export function ContentGenerator() {
   const convertLatexDelimiters = (content: string) => {
     if (!content) return ''
     
-    // Convert display math \[ ... \] to $$ ... $$
-    let converted = content.replace(/\\\[([\s\S]*?)\\\]/g, (match, math) => {
-      return '\n$$' + math + '$$\n'
+    // First convert display math \[ ... \] to $$ ... $$
+    let converted = content.replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (match, math) => {
+      return '\n\n$$' + math.trim() + '$$\n\n'
     })
     
-    // Convert inline math \( ... \) to $ ... $
-    converted = converted.replace(/\\\((.*?)\\\)/g, (match, math) => {
-      return '$' + math + '$'
+    // Then convert inline math \( ... \) to $ ... $
+    converted = converted.replace(/\\\(\s*(.*?)\s*\\\)/g, (match, math) => {
+      return '$' + math.trim() + '$'
     })
     
     return converted
