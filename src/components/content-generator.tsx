@@ -9,17 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Loader2, Sparkles, CheckCircle2 } from 'lucide-react'
 import { apiClient } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
-import dynamic from 'next/dynamic'
+import ReactMarkdown from 'react-markdown'
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import remarkGfm from 'remark-gfm'
 import 'katex/dist/katex.min.css'
-
-// Import markdown preview dynamically to avoid SSR issues
-const MarkdownPreview = dynamic(
-  () => import('@uiw/react-markdown-preview'),
-  { ssr: false }
-)
 
 interface Subject {
   _id: string
@@ -685,32 +679,14 @@ export function ContentGenerator() {
                   <Label className="text-sm font-semibold">Preview (Formatted)</Label>
                 </div>
                 <div className="flex-1 overflow-auto px-8 py-6 bg-white">
-                  <MarkdownPreview 
-                    source={editableContent}
-                    style={{ 
-                      backgroundColor: 'white',
-                      color: '#1f2937',
-                      padding: 0,
-                      fontSize: '16px',
-                      lineHeight: '1.75'
-                    }}
-                    wrapperElement={{
-                      "data-color-mode": "light"
-                    }}
-                    rehypePlugins={[[rehypeKatex, { strict: false, output: 'html' }]]}
-                    remarkPlugins={[remarkMath, remarkGfm]}
-                    components={{
-                      h1: ({ children, ...props }) => <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginTop: '1.5rem', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }} {...props}>{children}</h1>,
-                      h2: ({ children, ...props }) => <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', marginTop: '1.25rem', marginBottom: '0.75rem', borderBottom: '1px solid #e5e7eb', paddingBottom: '0.25rem' }} {...props}>{children}</h2>,
-                      h3: ({ children, ...props }) => <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem' }} {...props}>{children}</h3>,
-                      p: ({ children, ...props }) => <p style={{ marginBottom: '1rem', lineHeight: '1.75' }} {...props}>{children}</p>,
-                      ul: ({ children, ...props }) => <ul style={{ listStyleType: 'disc', paddingLeft: '1.5rem', marginBottom: '1rem' }} {...props}>{children}</ul>,
-                      ol: ({ children, ...props }) => <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5rem', marginBottom: '1rem' }} {...props}>{children}</ol>,
-                      li: ({ children, ...props }) => <li style={{ marginBottom: '0.5rem' }} {...props}>{children}</li>,
-                      strong: ({ children, ...props }) => <strong style={{ fontWeight: '700', color: '#111827' }} {...props}>{children}</strong>,
-                      em: ({ children, ...props }) => <em style={{ fontStyle: 'italic' }} {...props}>{children}</em>,
-                    }}
-                  />
+                  <div className="prose prose-lg max-w-none">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkMath, remarkGfm]}
+                      rehypePlugins={[rehypeKatex]}
+                    >
+                      {editableContent}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </div>
             </div>
