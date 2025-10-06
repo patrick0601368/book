@@ -184,9 +184,22 @@ export function ContentGenerator() {
   }
 
   const handleAddGrade = async () => {
-    if (newGrade.trim() && !grades.find(g => g.name === newGrade.trim())) {
+    const gradeNumber = newGrade.trim()
+    
+    // Validate that it's a number
+    if (!gradeNumber || isNaN(Number(gradeNumber))) {
+      toast({
+        title: "Invalid Grade",
+        description: "Grade must be a number (e.g., 5, 10, 12)",
+        variant: "destructive",
+        duration: 3000,
+      })
+      return
+    }
+    
+    if (!grades.find(g => g.name === gradeNumber)) {
       try {
-        const newGradeData = await apiClient.createGrade({ name: newGrade.trim() })
+        const newGradeData = await apiClient.createGrade({ name: gradeNumber })
         setGrades([...grades, newGradeData])
         setFormData({ ...formData, grade: newGradeData.name })
         setNewGrade('')
@@ -492,10 +505,13 @@ export function ContentGenerator() {
                   <div className="flex gap-2">
                     <Input
                       id="newGrade"
-                      placeholder="Enter grade (e.g., 5th Grade, High School)"
+                      type="number"
+                      placeholder="Enter grade number (e.g., 5, 10, 12)"
                       value={newGrade}
                       onChange={(e) => setNewGrade(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddGrade())}
+                      min="1"
+                      max="20"
                     />
                     <Button type="button" onClick={handleAddGrade} size="sm">
                       Add
@@ -522,7 +538,7 @@ export function ContentGenerator() {
                     disabled={isLoadingGrades}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={isLoadingGrades ? "Loading..." : "Select grade level"} />
+                      <SelectValue placeholder={isLoadingGrades ? "Loading..." : "Select grade (1-12)"} />
                     </SelectTrigger>
                     <SelectContent>
                       {grades.length === 0 && !isLoadingGrades && (
@@ -532,7 +548,7 @@ export function ContentGenerator() {
                       )}
                       {grades.map((grade) => (
                         <SelectItem key={grade._id} value={grade.name}>
-                          {grade.name}
+                          Grade {grade.name}
                         </SelectItem>
                       ))}
                       <SelectItem value="add_new" className="text-blue-600 font-medium">
