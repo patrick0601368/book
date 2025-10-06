@@ -112,7 +112,7 @@ export function ContentLibrary() {
       
       // Step 3: Restore LaTeX placeholders
       Object.keys(latexPlaceholders).forEach(placeholder => {
-        html = html.replace(placeholder, latexPlaceholders[placeholder])
+        html = html.replaceAll(placeholder, latexPlaceholders[placeholder])
       })
       
       return html
