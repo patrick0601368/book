@@ -639,12 +639,13 @@ export function ContentGenerator() {
       </Card>
 
       {showPreview && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Content Preview</span>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full h-full max-w-[98vw] max-h-[98vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-xl font-bold">Content Preview</h2>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-normal text-gray-500">
+                <span className="text-sm text-gray-500">
                   Powered by {selectedProvider === 'mistral' ? 'Mistral AI' : 'OpenAI GPT-4'}
                 </span>
                 <Button 
@@ -655,80 +656,133 @@ export function ContentGenerator() {
                   New Generation
                 </Button>
               </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="editableContent">Edit Content (Source)</Label>
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
+              {/* Editor Side */}
+              <div className="w-full md:w-1/2 flex flex-col border-r">
+                <div className="p-3 bg-gray-50 border-b">
+                  <Label htmlFor="editableContent" className="text-sm font-semibold">Edit Content (Source)</Label>
+                </div>
                 <textarea
                   id="editableContent"
-                  className="w-full min-h-[500px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
+                  className="flex-1 px-4 py-3 text-sm focus:outline-none font-mono resize-none"
                   value={editableContent}
                   onChange={(e) => setEditableContent(e.target.value)}
                 />
               </div>
-              <div>
-                <Label>Preview (Formatted)</Label>
-                <div className="w-full min-h-[500px] px-4 py-3 border border-gray-300 rounded-md bg-white overflow-auto prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900 prose-code:text-pink-600 prose-pre:bg-gray-100 prose-ul:my-4 prose-ol:my-4 prose-li:my-1">
-                  <ReactMarkdown 
-                    remarkPlugins={[remarkGfm, remarkMath]}
-                    rehypePlugins={[rehypeKatex]}
-                  >
-                    {editableContent}
-                  </ReactMarkdown>
+
+              {/* Preview Side */}
+              <div className="w-full md:w-1/2 flex flex-col bg-white">
+                <div className="p-3 bg-gray-50 border-b">
+                  <Label className="text-sm font-semibold">Preview (Formatted)</Label>
+                </div>
+                <div className="flex-1 overflow-auto px-8 py-6">
+                  <div className="prose prose-lg max-w-none
+                    prose-headings:font-bold prose-headings:text-gray-900
+                    prose-h1:text-3xl prose-h1:mb-4 prose-h1:mt-6
+                    prose-h2:text-2xl prose-h2:mb-3 prose-h2:mt-5
+                    prose-h3:text-xl prose-h3:mb-2 prose-h3:mt-4
+                    prose-p:text-gray-800 prose-p:leading-relaxed prose-p:mb-4
+                    prose-strong:text-gray-900 prose-strong:font-bold
+                    prose-em:italic prose-em:text-gray-800
+                    prose-ul:list-disc prose-ul:pl-6 prose-ul:mb-4
+                    prose-ol:list-decimal prose-ol:pl-6 prose-ol:mb-4
+                    prose-li:mb-2 prose-li:text-gray-800
+                    prose-a:text-blue-600 prose-a:underline
+                    prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-blockquote:pl-4 prose-blockquote:italic
+                    prose-code:text-pink-600 prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded
+                    prose-pre:bg-gray-900 prose-pre:text-white prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto
+                    prose-table:border-collapse prose-table:w-full
+                    prose-th:border prose-th:border-gray-300 prose-th:bg-gray-100 prose-th:p-2 prose-th:font-bold
+                    prose-td:border prose-td:border-gray-300 prose-td:p-2
+                    prose-img:rounded-lg prose-img:shadow-md
+                  ">
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm, remarkMath]}
+                      rehypePlugins={[rehypeKatex]}
+                      components={{
+                        // Custom components for better rendering
+                        h1: ({node, ...props}) => <h1 className="text-3xl font-bold mb-4 mt-6" {...props} />,
+                        h2: ({node, ...props}) => <h2 className="text-2xl font-bold mb-3 mt-5" {...props} />,
+                        h3: ({node, ...props}) => <h3 className="text-xl font-bold mb-2 mt-4" {...props} />,
+                        p: ({node, ...props}) => <p className="mb-4 leading-relaxed" {...props} />,
+                        strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
+                        em: ({node, ...props}) => <em className="italic" {...props} />,
+                        ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-4 space-y-2" {...props} />,
+                        ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-4 space-y-2" {...props} />,
+                        li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                        table: ({node, ...props}) => <table className="border-collapse w-full my-4" {...props} />,
+                        th: ({node, ...props}) => <th className="border border-gray-300 bg-gray-100 p-2 font-bold text-left" {...props} />,
+                        td: ({node, ...props}) => <td className="border border-gray-300 p-2" {...props} />,
+                      }}
+                    >
+                      {editableContent}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="refinementPrompt">Refine Content (Optional)</Label>
+            {/* Footer */}
+            <div className="p-4 border-t bg-gray-50 space-y-3">
+              <div>
+                <Label htmlFor="refinementPrompt" className="text-sm font-semibold">Refine Content (Optional)</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    id="refinementPrompt"
+                    placeholder="e.g., Make it shorter, add more examples, simplify language..."
+                    value={refinementPrompt}
+                    onChange={(e) => setRefinementPrompt(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && !isRefining && handleRefine()}
+                  />
+                  <Button 
+                    onClick={handleRefine} 
+                    disabled={isRefining || !refinementPrompt.trim()}
+                    variant="outline"
+                  >
+                    {isRefining ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Refining...
+                      </>
+                    ) : (
+                      'Refine'
+                    )}
+                  </Button>
+                </div>
+              </div>
+
               <div className="flex gap-2">
-                <Input
-                  id="refinementPrompt"
-                  placeholder="e.g., Make it shorter, add more examples, simplify language..."
-                  value={refinementPrompt}
-                  onChange={(e) => setRefinementPrompt(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !isRefining && handleRefine()}
-                />
                 <Button 
-                  onClick={handleRefine} 
-                  disabled={isRefining || !refinementPrompt.trim()}
-                  variant="outline"
+                  onClick={handleSave} 
+                  disabled={isSaving}
+                  className="flex-1"
                 >
-                  {isRefining ? (
+                  {isSaving ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Refining...
+                      Saving...
                     </>
                   ) : (
-                    'Refine'
+                    <>
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Save Content
+                    </>
                   )}
                 </Button>
+                <Button 
+                  onClick={handleNewGeneration} 
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Describe changes you'd like to make to the content
-              </p>
             </div>
-
-            <div className="flex gap-2 pt-4">
-              <Button 
-                onClick={handleSave} 
-                disabled={isSaving}
-                className="flex-1"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save Content'
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   )
