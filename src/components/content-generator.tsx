@@ -737,13 +737,13 @@ export function ContentGenerator() {
                 <Label htmlFor="country">Country (Optional)</Label>
                 <Select
                   value={formData.country}
-                  onValueChange={(value) => setFormData({ ...formData, country: value })}
+                  onValueChange={(value) => setFormData({ ...formData, country: value === 'none' ? '' : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select country" />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
-                    <SelectItem value="">No country preference</SelectItem>
+                    <SelectItem value="none">No country preference</SelectItem>
                     {Object.entries(countries.getNames('en', { select: 'official' }))
                       .sort((a, b) => a[1].localeCompare(b[1]))
                       .map(([code, name]) => (
