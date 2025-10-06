@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -8,10 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Sparkles, CheckCircle2 } from 'lucide-react'
 import { apiClient } from '@/lib/api'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import remarkMath from 'remark-math'
-import rehypeKatex from 'rehype-katex'
+import { marked } from 'marked'
 import { useToast } from '@/hooks/use-toast'
 import 'katex/dist/katex.min.css'
 
@@ -76,6 +73,55 @@ export function ContentGenerator() {
   const [refinementPrompt, setRefinementPrompt] = useState('')
   const [selectedProvider, setSelectedProvider] = useState('openai')
   const [showPreview, setShowPreview] = useState(false)
+
+  // Configure marked for better rendering
+  useEffect(() => {
+    marked.setOptions({
+      breaks: true,
+      gfm: true,
+    })
+  }, [])
+
+  // Render markdown with LaTeX support
+  const renderMarkdown = useMemo(() => {
+    if (!editableContent) return ''
+    
+    try {
+      // First, process LaTeX expressions
+      let processedContent = editableContent
+      
+      // Replace display math \[ ... \] with <div class="math-block">
+      processedContent = processedContent.replace(/\\\[([\s\S]*?)\\\]/g, (match, math) => {
+        return `<div class="katex-display">${renderKatex(math, true)}</div>`
+      })
+      
+      // Replace inline math \( ... \) with <span class="math-inline">
+      processedContent = processedContent.replace(/\\\((.*?)\\\)/g, (match, math) => {
+        return `<span class="katex-inline">${renderKatex(math, false)}</span>`
+      })
+      
+      // Then render markdown
+      return marked.parse(processedContent)
+    } catch (error) {
+      console.error('Error rendering markdown:', error)
+      return editableContent
+    }
+  }, [editableContent])
+
+  // Render KaTeX
+  const renderKatex = (math: string, displayMode: boolean = false) => {
+    try {
+      const katex = require('katex')
+      return katex.renderToString(math, {
+        displayMode,
+        throwOnError: false,
+        output: 'html'
+      })
+    } catch (error) {
+      console.error('KaTeX render error:', error)
+      return math
+    }
+  }
 
   // Load subjects from database
   useEffect(() => {
@@ -679,14 +725,10 @@ export function ContentGenerator() {
                   <Label className="text-sm font-semibold">Preview (Formatted)</Label>
                 </div>
                 <div className="flex-1 overflow-auto px-8 py-6 bg-white">
-                  <div className="prose prose-lg max-w-none">
-                    <ReactMarkdown 
-                      remarkPlugins={[remarkGfm, remarkMath]}
-                      rehypePlugins={[rehypeKatex]}
-                    >
-                      {editableContent}
-                    </ReactMarkdown>
-                  </div>
+                  <div 
+                    className="prose prose-lg max-w-none"
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown }}
+                  />
                 </div>
               </div>
             </div>
