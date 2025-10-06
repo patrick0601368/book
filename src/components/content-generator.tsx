@@ -10,6 +10,11 @@ import { Loader2, Sparkles, CheckCircle2 } from 'lucide-react'
 import { apiClient } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 import { marked } from 'marked'
+import countries from 'i18n-iso-countries'
+import enLocale from 'i18n-iso-countries/langs/en.json'
+
+// Register English locale for country names
+countries.registerLocale(enLocale)
 
 interface Subject {
   _id: string
@@ -43,7 +48,9 @@ export function ContentGenerator() {
     state: '',
     schoolType: '',
     grade: '',
-    customPrompt: ''
+    customPrompt: '',
+    language: 'English',
+    country: ''
   })
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [states, setStates] = useState<StateData[]>([])
@@ -692,6 +699,58 @@ export function ContentGenerator() {
                   <SelectContent>
                     <SelectItem value="openai">OpenAI (GPT-4)</SelectItem>
                     <SelectItem value="mistral">Mistral AI</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="language">Output Language</Label>
+                <Select
+                  value={formData.language}
+                  onValueChange={(value) => setFormData({ ...formData, language: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="English">English</SelectItem>
+                    <SelectItem value="German">German (Deutsch)</SelectItem>
+                    <SelectItem value="Spanish">Spanish (Español)</SelectItem>
+                    <SelectItem value="French">French (Français)</SelectItem>
+                    <SelectItem value="Italian">Italian (Italiano)</SelectItem>
+                    <SelectItem value="Portuguese">Portuguese (Português)</SelectItem>
+                    <SelectItem value="Dutch">Dutch (Nederlands)</SelectItem>
+                    <SelectItem value="Polish">Polish (Polski)</SelectItem>
+                    <SelectItem value="Russian">Russian (Русский)</SelectItem>
+                    <SelectItem value="Chinese">Chinese (中文)</SelectItem>
+                    <SelectItem value="Japanese">Japanese (日本語)</SelectItem>
+                    <SelectItem value="Korean">Korean (한국어)</SelectItem>
+                    <SelectItem value="Arabic">Arabic (العربية)</SelectItem>
+                    <SelectItem value="Hindi">Hindi (हिन्दी)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="country">Country (Optional)</Label>
+                <Select
+                  value={formData.country}
+                  onValueChange={(value) => setFormData({ ...formData, country: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    <SelectItem value="">No country preference</SelectItem>
+                    {Object.entries(countries.getNames('en', { select: 'official' }))
+                      .sort((a, b) => a[1].localeCompare(b[1]))
+                      .map(([code, name]) => (
+                        <SelectItem key={code} value={name}>
+                          {name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>

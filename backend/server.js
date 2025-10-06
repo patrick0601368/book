@@ -261,12 +261,15 @@ app.post('/api/auth/login', async (req, res) => {
 // Generate content
 app.post('/api/generate-content', authenticateToken, async (req, res) => {
   try {
-    const { type, subject, topic, difficulty, provider = 'openai', customPrompt, state, schoolType, grade } = req.body;
+    const { type, subject, topic, difficulty, provider = 'openai', customPrompt, state, schoolType, grade, language = 'English', country } = req.body;
 
     let prompt = '';
 
     // Build context information
     let contextInfo = '';
+    if (country) {
+      contextInfo += `Country: ${country}\n`;
+    }
     if (state) {
       contextInfo += `State/Location: ${state}\n`;
     }
@@ -296,7 +299,8 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
            - Inline math (in text): \\( formula \\)
         4. Example: The quadratic formula is \\[ x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} \\]
         5. DO NOT use $ or $$ for math - ONLY use \\[ \\] and \\( \\)
-        6. DO NOT escape the backslashes - write \\[ not \\\\[`;
+        6. DO NOT escape the backslashes - write \\[ not \\\\[
+        7. LANGUAGE: Write the ENTIRE response in ${language}`;
         break;
 
       case 'exercise':
@@ -310,7 +314,8 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
         1. Return ONLY markdown content - NO code blocks, NO backticks
         2. For math: Display math \\[ formula \\], Inline math \\( formula \\)
         3. DO NOT use $ or $$
-        4. DO NOT escape backslashes`;
+        4. DO NOT escape backslashes
+        5. LANGUAGE: Write the ENTIRE response in ${language}`;
         break;
 
       case 'exercise-with-solution':
@@ -327,7 +332,8 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
         2. For math: Display math \\[ formula \\], Inline math \\( formula \\)
         3. Example: Step 1: Calculate \\[ D = b^2 - 4ac \\]
         4. DO NOT use $ or $$
-        5. DO NOT escape backslashes`;
+        5. DO NOT escape backslashes
+        6. LANGUAGE: Write the ENTIRE response in ${language}`;
         break;
 
       default:
