@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Sparkles } from 'lucide-react'
+import { Loader2, Sparkles, CheckCircle2 } from 'lucide-react'
 import { apiClient } from '@/lib/api'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { useToast } from '@/hooks/use-toast'
 
 interface Subject {
   _id: string
@@ -28,6 +29,7 @@ interface SchoolType {
 }
 
 export function ContentGenerator() {
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
     subject: '',
     topic: '',
@@ -205,16 +207,28 @@ export function ContentGenerator() {
         schoolType: formData.schoolType,
       })
       
+      // Show success toast
+      toast({
+        title: "Content Saved!",
+        description: `"${formData.subject} - ${formData.topic}" has been saved successfully.`,
+        duration: 5000,
+      })
+      
       // Reset form and preview
       setShowPreview(false)
       setGeneratedContent('')
       setEditableContent('')
       setRefinementPrompt('')
-      
-      alert('Content saved successfully!')
     } catch (error) {
       console.error('Error saving content:', error)
-      alert('Failed to save content. Please try again.')
+      
+      // Show error toast
+      toast({
+        title: "Save Failed",
+        description: error instanceof Error ? error.message : "Failed to save content. Please try again.",
+        variant: "destructive",
+        duration: 5000,
+      })
     } finally {
       setIsSaving(false)
     }
