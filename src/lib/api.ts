@@ -112,6 +112,10 @@ export class ApiClient {
     });
   }
 
+  async getContent() {
+    return this.request('/api/content');
+  }
+
   async getContentStats() {
     return this.request('/api/content/stats');
   }

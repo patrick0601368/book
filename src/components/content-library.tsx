@@ -75,7 +75,7 @@ export function ContentLibrary() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const contentsResponse = await apiClient.request('/api/content')
+        const contentsResponse = await apiClient.getContent()
         const subjectsData = await apiClient.getSubjects()
         const statesData = await apiClient.getStates()
         const schoolTypesData = await apiClient.getSchoolTypes()
