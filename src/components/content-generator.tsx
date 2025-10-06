@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Sparkles } from 'lucide-react'
 import { apiClient } from '@/lib/api'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface Subject {
   _id: string
@@ -523,14 +525,27 @@ export function ContentGenerator() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="editableContent">Edit Content</Label>
-              <textarea
-                id="editableContent"
-                className="w-full min-h-[400px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
-                value={editableContent}
-                onChange={(e) => setEditableContent(e.target.value)}
-              />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="editableContent">Edit Content (Source)</Label>
+                <textarea
+                  id="editableContent"
+                  className="w-full min-h-[500px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
+                  value={editableContent}
+                  onChange={(e) => setEditableContent(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Preview (Formatted)</Label>
+                <div className="w-full min-h-[500px] px-4 py-3 border border-gray-300 rounded-md bg-white overflow-auto">
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900 prose-code:text-pink-600 prose-pre:bg-gray-100 prose-ul:my-4 prose-ol:my-4 prose-li:my-1"
+                  >
+                    {editableContent}
+                  </ReactMarkdown>
+                </div>
+              </div>
             </div>
 
             <div>
