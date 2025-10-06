@@ -9,11 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Loader2, Sparkles, CheckCircle2 } from 'lucide-react'
 import { apiClient } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
-import ReactMarkdown from 'react-markdown'
-import rehypeKatex from 'rehype-katex'
-import remarkMath from 'remark-math'
-import remarkGfm from 'remark-gfm'
-import 'katex/dist/katex.min.css'
+import { marked } from 'marked'
 
 interface Subject {
   _id: string
@@ -77,22 +73,31 @@ export function ContentGenerator() {
   const [selectedProvider, setSelectedProvider] = useState('openai')
   const [showPreview, setShowPreview] = useState(false)
 
-  // Convert LaTeX delimiters to markdown math format
-  const convertLatexDelimiters = (content: string) => {
+  // Simple markdown renderer - MathJax will handle the math
+  const renderMarkdown = (content: string) => {
     if (!content) return ''
     
-    // First convert display math \[ ... \] to $$ ... $$
-    let converted = content.replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (match, math) => {
-      return '\n\n$$' + math.trim() + '$$\n\n'
-    })
-    
-    // Then convert inline math \( ... \) to $ ... $
-    converted = converted.replace(/\\\(\s*(.*?)\s*\\\)/g, (match, math) => {
-      return '$' + math.trim() + '$'
-    })
-    
-    return converted
+    try {
+      marked.setOptions({
+        breaks: true,
+        gfm: true
+      })
+      
+      return marked.parse(content) as string
+    } catch (error) {
+      console.error('Rendering error:', error)
+      return content
+    }
   }
+
+  // Trigger MathJax rendering
+  useEffect(() => {
+    if (showPreview && typeof window !== 'undefined' && (window as any).MathJax) {
+      setTimeout(() => {
+        (window as any).MathJax.typesetPromise?.().catch((err: any) => console.error('MathJax error:', err))
+      }, 100)
+    }
+  }, [showPreview, editableContent])
 
   // Load subjects from database
   useEffect(() => {
@@ -696,14 +701,10 @@ export function ContentGenerator() {
                   <Label className="text-sm font-semibold">Preview (Formatted)</Label>
                 </div>
                 <div className="flex-1 overflow-auto px-8 py-6 bg-white">
-                  <div className="prose prose-lg max-w-none">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkMath, remarkGfm]}
-                      rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]}
-                    >
-                      {convertLatexDelimiters(editableContent)}
-                    </ReactMarkdown>
-                  </div>
+                  <div 
+                    className="prose prose-lg max-w-none"
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown(editableContent) }}
+                  />
                 </div>
               </div>
             </div>

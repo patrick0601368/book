@@ -60,29 +60,12 @@
 
 /* Prose styles for markdown preview */
 .prose {
-  color: #1f2937 !important;
-  background-color: white !important;
+  color: #1f2937;
+  background-color: white;
 }
 
-.prose *:not(.katex *):not(.katex-display *) {
-  color: #1f2937 !important;
-  background-color: transparent !important;
-}
-
-/* Ensure code blocks don't have dark background */
-.prose code {
-  background-color: #fdf2f8 !important;
-  color: #db2777 !important;
-}
-
-.prose pre {
-  background-color: #f3f4f6 !important;
-  color: #1f2937 !important;
-}
-
-.prose pre code {
-  background-color: transparent !important;
-  color: inherit !important;
+.prose * {
+  color: inherit;
 }
 
 .prose h1 {

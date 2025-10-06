@@ -8,11 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Search, FileText, BookOpen, ClipboardList, Eye, X } from 'lucide-react'
 import { apiClient } from '@/lib/api'
-import ReactMarkdown from 'react-markdown'
-import rehypeKatex from 'rehype-katex'
-import remarkMath from 'remark-math'
-import remarkGfm from 'remark-gfm'
-import 'katex/dist/katex.min.css'
+import { marked } from 'marked'
 
 interface Content {
   _id: string
@@ -67,22 +63,31 @@ export function ContentLibrary() {
   const [filterSchoolType, setFilterSchoolType] = useState('all')
   const [filterGrade, setFilterGrade] = useState('all')
 
-  // Convert LaTeX delimiters to markdown math format
-  const convertLatexDelimiters = (content: string) => {
+  // Simple markdown renderer - MathJax will handle the math
+  const renderMarkdown = (content: string) => {
     if (!content) return ''
     
-    // First convert display math \[ ... \] to $$ ... $$
-    let converted = content.replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (match, math) => {
-      return '\n\n$$' + math.trim() + '$$\n\n'
-    })
-    
-    // Then convert inline math \( ... \) to $ ... $
-    converted = converted.replace(/\\\(\s*(.*?)\s*\\\)/g, (match, math) => {
-      return '$' + math.trim() + '$'
-    })
-    
-    return converted
+    try {
+      marked.setOptions({
+        breaks: true,
+        gfm: true
+      })
+      
+      return marked.parse(content) as string
+    } catch (error) {
+      console.error('Rendering error:', error)
+      return content
+    }
   }
+
+  // Trigger MathJax rendering after content changes
+  useEffect(() => {
+    if (selectedContent && typeof window !== 'undefined' && (window as any).MathJax) {
+      setTimeout(() => {
+        (window as any).MathJax.typesetPromise?.().catch((err: any) => console.error('MathJax error:', err))
+      }, 100)
+    }
+  }, [selectedContent])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -402,14 +407,10 @@ export function ContentLibrary() {
             </div>
 
             <div className="flex-1 overflow-auto p-8 bg-white">
-              <div className="prose prose-lg max-w-none">
-                <ReactMarkdown
-                  remarkPlugins={[remarkMath, remarkGfm]}
-                  rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]}
-                >
-                  {convertLatexDelimiters(selectedContent.content)}
-                </ReactMarkdown>
-              </div>
+              <div 
+                className="prose prose-lg max-w-none"
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedContent.content) }}
+              />
             </div>
 
             <div className="p-4 border-t bg-gray-50">
