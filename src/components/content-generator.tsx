@@ -84,7 +84,7 @@ export function ContentGenerator() {
       
       // Protect display math \[ ... \]
       let protectedContent = content.replace(/\\\[([\s\S]*?)\\\]/g, (match) => {
-        const placeholder = `___LATEX_DISPLAY_${placeholderIndex}___`
+        const placeholder = `XLATEXDISPLAYX${placeholderIndex}XLATEXDISPLAYX`
         latexPlaceholders[placeholder] = match
         placeholderIndex++
         return placeholder
@@ -92,7 +92,7 @@ export function ContentGenerator() {
       
       // Protect inline math \( ... \)
       protectedContent = protectedContent.replace(/\\\((.*?)\\\)/g, (match) => {
-        const placeholder = `___LATEX_INLINE_${placeholderIndex}___`
+        const placeholder = `XLATEXINLINEX${placeholderIndex}XLATEXINLINEX`
         latexPlaceholders[placeholder] = match
         placeholderIndex++
         return placeholder
