@@ -10,6 +10,9 @@ import { Loader2, Sparkles, CheckCircle2 } from 'lucide-react'
 import { apiClient } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 import dynamic from 'next/dynamic'
+import rehypeKatex from 'rehype-katex'
+import remarkMath from 'remark-math'
+import remarkGfm from 'remark-gfm'
 import 'katex/dist/katex.min.css'
 
 // Import markdown preview dynamically to avoid SSR issues
@@ -693,6 +696,19 @@ export function ContentGenerator() {
                     }}
                     wrapperElement={{
                       "data-color-mode": "light"
+                    }}
+                    rehypePlugins={[rehypeKatex]}
+                    remarkPlugins={[remarkMath, remarkGfm]}
+                    components={{
+                      h1: ({ children }) => <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginTop: '1.5rem', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>{children}</h1>,
+                      h2: ({ children }) => <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', marginTop: '1.25rem', marginBottom: '0.75rem', borderBottom: '1px solid #e5e7eb', paddingBottom: '0.25rem' }}>{children}</h2>,
+                      h3: ({ children }) => <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem' }}>{children}</h3>,
+                      p: ({ children }) => <p style={{ marginBottom: '1rem', lineHeight: '1.75' }}>{children}</p>,
+                      ul: ({ children }) => <ul style={{ listStyleType: 'disc', paddingLeft: '1.5rem', marginBottom: '1rem' }}>{children}</ul>,
+                      ol: ({ children }) => <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5rem', marginBottom: '1rem' }}>{children}</ol>,
+                      li: ({ children }) => <li style={{ marginBottom: '0.5rem' }}>{children}</li>,
+                      strong: ({ children }) => <strong style={{ fontWeight: '700', color: '#111827' }}>{children}</strong>,
+                      em: ({ children }) => <em style={{ fontStyle: 'italic' }}>{children}</em>,
                     }}
                   />
                 </div>
