@@ -94,6 +94,22 @@ export class ApiClient {
     });
   }
 
+  async saveContent(data: {
+    title: string;
+    content: string;
+    subject: string;
+    topic: string;
+    difficulty: string;
+    type: string;
+    state?: string;
+    schoolType?: string;
+  }) {
+    return this.request('/api/content', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   async getUserProfile() {
     return this.request('/api/user/profile');
   }

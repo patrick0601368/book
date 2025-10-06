@@ -81,7 +81,22 @@ const schoolTypeSchema = new mongoose.Schema({
 
 const SchoolType = mongoose.model('SchoolType', schoolTypeSchema);
 
-// Learning Page Schema
+// Content Schema (unified for all content types)
+const contentSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  content: { type: String, required: true },
+  subject: { type: String, required: true },
+  topic: { type: String, required: true },
+  difficulty: { type: String, required: true },
+  type: { type: String, required: true }, // 'learning-page', 'exercise', 'exercise-with-solution'
+  state: { type: String },
+  schoolType: { type: String },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+}, { timestamps: true });
+
+const Content = mongoose.model('Content', contentSchema);
+
+// Keep legacy schemas for backward compatibility
 const learningPageSchema = new mongoose.Schema({
   title: { type: String, required: true },
   content: { type: String, required: true },
@@ -92,7 +107,6 @@ const learningPageSchema = new mongoose.Schema({
 
 const LearningPage = mongoose.model('LearningPage', learningPageSchema);
 
-// Exercise Schema
 const exerciseSchema = new mongoose.Schema({
   title: { type: String, required: true },
   content: { type: String, required: true },
@@ -358,6 +372,49 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error generating content:', error);
     res.status(500).json({ error: 'Failed to generate content' });
+  }
+});
+
+// Save generated content
+app.post('/api/content', authenticateToken, async (req, res) => {
+  try {
+    const { title, content, subject, topic, difficulty, type, state, schoolType } = req.body;
+
+    if (!title || !content || !subject || !topic || !difficulty || !type) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    const savedContent = await Content.create({
+      title,
+      content,
+      subject,
+      topic,
+      difficulty,
+      type,
+      state: state || '',
+      schoolType: schoolType || '',
+      userId: req.user.userId,
+    });
+
+    res.status(201).json({
+      message: 'Content saved successfully',
+      content: savedContent,
+    });
+  } catch (error) {
+    console.error('Error saving content:', error);
+    res.status(500).json({ message: 'Failed to save content' });
+  }
+});
+
+// Get all saved content for user
+app.get('/api/content', authenticateToken, async (req, res) => {
+  try {
+    const contents = await Content.find({ userId: req.user.userId })
+      .sort({ createdAt: -1 });
+    res.json(contents);
+  } catch (error) {
+    console.error('Error fetching content:', error);
+    res.status(500).json({ message: 'Failed to fetch content' });
   }
 });
 

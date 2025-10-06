@@ -49,11 +49,16 @@ export function ContentGenerator() {
   const [newSchoolType, setNewSchoolType] = useState('')
   
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isRefining, setIsRefining] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [isLoadingSubjects, setIsLoadingSubjects] = useState(true)
   const [isLoadingStates, setIsLoadingStates] = useState(true)
   const [isLoadingSchoolTypes, setIsLoadingSchoolTypes] = useState(true)
   const [generatedContent, setGeneratedContent] = useState('')
+  const [editableContent, setEditableContent] = useState('')
+  const [refinementPrompt, setRefinementPrompt] = useState('')
   const [selectedProvider, setSelectedProvider] = useState('openai')
+  const [showPreview, setShowPreview] = useState(false)
 
   // Load subjects from database
   useEffect(() => {
@@ -152,12 +157,72 @@ export function ContentGenerator() {
     try {
       const data = await apiClient.generateContent(formData)
       setGeneratedContent(data.content)
+      setEditableContent(data.content)
       setSelectedProvider(data.provider || formData.provider)
+      setShowPreview(true)
+      setRefinementPrompt('')
     } catch (error) {
       console.error('Error generating content:', error)
     } finally {
       setIsGenerating(false)
     }
+  }
+
+  const handleRefine = async () => {
+    if (!refinementPrompt.trim()) return
+    
+    setIsRefining(true)
+
+    try {
+      const data = await apiClient.generateContent({
+        ...formData,
+        customPrompt: `Based on this existing content:\n\n${editableContent}\n\nPlease make the following changes: ${refinementPrompt}`
+      })
+      setGeneratedContent(data.content)
+      setEditableContent(data.content)
+      setRefinementPrompt('')
+    } catch (error) {
+      console.error('Error refining content:', error)
+    } finally {
+      setIsRefining(false)
+    }
+  }
+
+  const handleSave = async () => {
+    setIsSaving(true)
+
+    try {
+      await apiClient.saveContent({
+        title: `${formData.subject} - ${formData.topic}`,
+        content: editableContent,
+        subject: formData.subject,
+        topic: formData.topic,
+        difficulty: formData.difficulty,
+        type: formData.type,
+        state: formData.state,
+        schoolType: formData.schoolType,
+      })
+      
+      // Reset form and preview
+      setShowPreview(false)
+      setGeneratedContent('')
+      setEditableContent('')
+      setRefinementPrompt('')
+      
+      alert('Content saved successfully!')
+    } catch (error) {
+      console.error('Error saving content:', error)
+      alert('Failed to save content. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleNewGeneration = () => {
+    setShowPreview(false)
+    setGeneratedContent('')
+    setEditableContent('')
+    setRefinementPrompt('')
   }
 
   return (
@@ -438,19 +503,81 @@ export function ContentGenerator() {
         </CardContent>
       </Card>
 
-      {generatedContent && (
+      {showPreview && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>Generated Content</span>
-              <span className="text-sm font-normal text-gray-500">
-                Powered by {selectedProvider === 'mistral' ? 'Mistral AI' : 'OpenAI GPT-4'}
-              </span>
+              <span>Content Preview</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-normal text-gray-500">
+                  Powered by {selectedProvider === 'mistral' ? 'Mistral AI' : 'OpenAI GPT-4'}
+                </span>
+                <Button 
+                  onClick={handleNewGeneration} 
+                  variant="outline" 
+                  size="sm"
+                >
+                  New Generation
+                </Button>
+              </div>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="prose max-w-none">
-              <pre className="whitespace-pre-wrap text-sm">{generatedContent}</pre>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="editableContent">Edit Content</Label>
+              <textarea
+                id="editableContent"
+                className="w-full min-h-[400px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
+                value={editableContent}
+                onChange={(e) => setEditableContent(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="refinementPrompt">Refine Content (Optional)</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="refinementPrompt"
+                  placeholder="e.g., Make it shorter, add more examples, simplify language..."
+                  value={refinementPrompt}
+                  onChange={(e) => setRefinementPrompt(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && !isRefining && handleRefine()}
+                />
+                <Button 
+                  onClick={handleRefine} 
+                  disabled={isRefining || !refinementPrompt.trim()}
+                  variant="outline"
+                >
+                  {isRefining ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Refining...
+                    </>
+                  ) : (
+                    'Refine'
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Describe changes you'd like to make to the content
+              </p>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button 
+                onClick={handleSave} 
+                disabled={isSaving}
+                className="flex-1"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Content'
+                )}
+              </Button>
             </div>
           </CardContent>
         </Card>
