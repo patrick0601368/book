@@ -485,64 +485,63 @@ export function ContentGenerator() {
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="grade">Grade (Optional)</Label>
-              {isAddingNewGrade ? (
-                <div className="flex gap-2">
-                  <Input
-                    id="newGrade"
-                    placeholder="Enter grade (e.g., 5th Grade, High School)"
-                    value={newGrade}
-                    onChange={(e) => setNewGrade(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddGrade())}
-                  />
-                  <Button type="button" onClick={handleAddGrade} size="sm">
-                    Add
-                  </Button>
-                  <Button 
-                    type="button" 
-                    onClick={() => setIsAddingNewGrade(false)} 
-                    variant="outline" 
-                    size="sm"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="grade">Grade (Optional)</Label>
+                {isAddingNewGrade ? (
+                  <div className="flex gap-2">
+                    <Input
+                      id="newGrade"
+                      placeholder="Enter grade (e.g., 5th Grade, High School)"
+                      value={newGrade}
+                      onChange={(e) => setNewGrade(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddGrade())}
+                    />
+                    <Button type="button" onClick={handleAddGrade} size="sm">
+                      Add
+                    </Button>
+                    <Button 
+                      type="button" 
+                      onClick={() => setIsAddingNewGrade(false)} 
+                      variant="outline" 
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <Select
+                    value={formData.grade}
+                    onValueChange={(value) => {
+                      if (value === 'add_new') {
+                        setIsAddingNewGrade(true)
+                      } else {
+                        setFormData({ ...formData, grade: value })
+                      }
+                    }}
+                    disabled={isLoadingGrades}
                   >
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <Select
-                  value={formData.grade}
-                  onValueChange={(value) => {
-                    if (value === 'add_new') {
-                      setIsAddingNewGrade(true)
-                    } else {
-                      setFormData({ ...formData, grade: value })
-                    }
-                  }}
-                  disabled={isLoadingGrades}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={isLoadingGrades ? "Loading..." : "Select grade level"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {grades.length === 0 && !isLoadingGrades && (
-                      <div className="px-2 py-1.5 text-sm text-gray-500">
-                        No grades yet. Add one!
-                      </div>
-                    )}
-                    {grades.map((grade) => (
-                      <SelectItem key={grade._id} value={grade.name}>
-                        {grade.name}
+                    <SelectTrigger>
+                      <SelectValue placeholder={isLoadingGrades ? "Loading..." : "Select grade level"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {grades.length === 0 && !isLoadingGrades && (
+                        <div className="px-2 py-1.5 text-sm text-gray-500">
+                          No grades yet. Add one!
+                        </div>
+                      )}
+                      {grades.map((grade) => (
+                        <SelectItem key={grade._id} value={grade.name}>
+                          {grade.name}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="add_new" className="text-blue-600 font-medium">
+                        + Add New Grade
                       </SelectItem>
-                    ))}
-                    <SelectItem value="add_new" className="text-blue-600 font-medium">
-                      + Add New Grade
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
               <div>
                 <Label htmlFor="difficulty">Difficulty Level</Label>
                 <Select
@@ -559,6 +558,9 @@ export function ContentGenerator() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="type">Content Type</Label>
                 <Select
