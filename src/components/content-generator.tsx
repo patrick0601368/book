@@ -78,15 +78,32 @@ export function ContentGenerator() {
     if (!content) return ''
     
     try {
+      // Configure marked with custom renderer
+      const renderer = new marked.Renderer()
+      
+      // Override code block rendering to prevent dark backgrounds
+      renderer.code = (code, language) => {
+        return `<pre class="bg-gray-100 text-gray-900 p-4 rounded"><code>${code}</code></pre>`
+      }
+      
+      // Override inline code rendering
+      renderer.codespan = (code) => {
+        return `<code class="bg-pink-100 text-pink-700 px-1 rounded">${code}</code>`
+      }
+      
       marked.setOptions({
         breaks: true,
-        gfm: true
+        gfm: true,
+        headerIds: false,
+        mangle: false,
+        renderer: renderer
       })
       
-      return marked.parse(content) as string
+      const html = marked.parse(content) as string
+      return html
     } catch (error) {
       console.error('Rendering error:', error)
-      return content
+      return `<div class="text-gray-900">${content.replace(/\n/g, '<br>')}</div>`
     }
   }
 

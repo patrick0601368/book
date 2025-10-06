@@ -287,7 +287,8 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
         - Key concepts
         - Examples
         - Visual descriptions where helpful
-        Format as markdown with proper headings.`;
+        
+        IMPORTANT: Return ONLY the markdown content. Do NOT wrap it in code blocks or backticks. Use proper markdown formatting with headings (# ## ###), bold (**text**), italic (*text*), and LaTeX math notation using \\[ \\] for display math and \\( \\) for inline math.`;
         break;
 
       case 'exercise':
@@ -296,7 +297,8 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
         Include:
         - A clear question/problem
         - DO NOT include the solution
-        Format as markdown.`;
+        
+        IMPORTANT: Return ONLY the markdown content. Do NOT wrap it in code blocks or backticks. Use proper markdown formatting and LaTeX math notation using \\[ \\] for display math and \\( \\) for inline math.`;
         break;
 
       case 'exercise-with-solution':
@@ -307,7 +309,8 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
         - Step-by-step solution path
         - Detailed explanation of each step
         - Key concepts and reasoning
-        Format as markdown with clear sections.`;
+        
+        IMPORTANT: Return ONLY the markdown content. Do NOT wrap it in code blocks or backticks. Use proper markdown formatting with headings (# ## ###), bold (**text**), lists, and LaTeX math notation using \\[ \\] for display math and \\( \\) for inline math.`;
         break;
 
       default:
@@ -378,6 +381,16 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
       });
 
       content = completion.choices[0]?.message?.content || '';
+    }
+
+    // Clean up content if AI wrapped it in code blocks
+    content = content.trim();
+    
+    // Remove markdown code block wrapper if present
+    if (content.startsWith('```markdown')) {
+      content = content.replace(/^```markdown\s*\n/, '').replace(/\n```\s*$/, '');
+    } else if (content.startsWith('```')) {
+      content = content.replace(/^```\s*\n/, '').replace(/\n```\s*$/, '');
     }
 
     res.json({ content, provider });

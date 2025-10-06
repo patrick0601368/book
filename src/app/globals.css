@@ -60,12 +60,22 @@
 
 /* Prose styles for markdown preview */
 .prose {
-  color: #1f2937;
-  background-color: white;
+  color: #1f2937 !important;
+  background-color: white !important;
 }
 
 .prose * {
-  color: inherit;
+  color: #1f2937 !important;
+  background-color: transparent !important;
+}
+
+/* Override for specific elements */
+.prose strong {
+  color: #111827 !important;
+}
+
+.prose a {
+  color: #2563eb !important;
 }
 
 .prose h1 {
@@ -135,8 +145,8 @@
 }
 
 .prose pre {
-  background-color: #1f2937;
-  color: #f9fafb;
+  background-color: #f3f4f6 !important;
+  color: #1f2937 !important;
   padding: 1rem;
   border-radius: 0.5rem;
   overflow-x: auto;
@@ -144,8 +154,8 @@
 }
 
 .prose pre code {
-  background-color: transparent;
-  color: inherit;
+  background-color: transparent !important;
+  color: #1f2937 !important;
   padding: 0;
   font-size: 0.875rem;
 }
