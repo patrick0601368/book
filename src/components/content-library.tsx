@@ -69,8 +69,8 @@ export function ContentLibrary() {
 
   // Convert LaTeX delimiters to markdown math format
   const convertLatexDelimiters = (content: string) => {
-    let converted = content.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$1$$')
-    converted = converted.replace(/\\\((.*?)\\\)/g, '\$$1\$')
+    let converted = content.replace(/\\\[([\s\S]*?)\\\]/g, (match, math) => `$$${math}$$`)
+    converted = converted.replace(/\\\((.*?)\\\)/g, (match, math) => `$${math}$`)
     return converted
   }
 

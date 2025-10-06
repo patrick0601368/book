@@ -80,9 +80,9 @@ export function ContentGenerator() {
   // Convert LaTeX delimiters to markdown math format
   const convertLatexDelimiters = (content: string) => {
     // Convert display math \[ ... \] to $$ ... $$
-    let converted = content.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$1$$')
+    let converted = content.replace(/\\\[([\s\S]*?)\\\]/g, (match, math) => `$$${math}$$`)
     // Convert inline math \( ... \) to $ ... $
-    converted = converted.replace(/\\\((.*?)\\\)/g, '\$$1\$')
+    converted = converted.replace(/\\\((.*?)\\\)/g, (match, math) => `$${math}$`)
     return converted
   }
 
