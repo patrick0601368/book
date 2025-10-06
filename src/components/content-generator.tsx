@@ -122,9 +122,14 @@ export function ContentGenerator() {
       
       // Step 3: Restore LaTeX placeholders
       Object.keys(latexPlaceholders).forEach(placeholder => {
-        const regex = new RegExp(placeholder, 'g')
+        // Escape special regex characters in placeholder
+        const escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const regex = new RegExp(escapedPlaceholder, 'g')
         html = html.replace(regex, latexPlaceholders[placeholder])
       })
+      
+      console.log('LaTeX placeholders:', Object.keys(latexPlaceholders).length)
+      console.log('HTML after restoration:', html.substring(0, 500))
       
       return html
     } catch (error) {

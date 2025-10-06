@@ -112,7 +112,9 @@ export function ContentLibrary() {
       
       // Step 3: Restore LaTeX placeholders
       Object.keys(latexPlaceholders).forEach(placeholder => {
-        const regex = new RegExp(placeholder, 'g')
+        // Escape special regex characters in placeholder
+        const escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const regex = new RegExp(escapedPlaceholder, 'g')
         html = html.replace(regex, latexPlaceholders[placeholder])
       })
       
