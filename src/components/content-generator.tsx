@@ -122,7 +122,8 @@ export function ContentGenerator() {
       
       // Step 3: Restore LaTeX placeholders
       Object.keys(latexPlaceholders).forEach(placeholder => {
-        html = html.replaceAll(placeholder, latexPlaceholders[placeholder])
+        const regex = new RegExp(placeholder, 'g')
+        html = html.replace(regex, latexPlaceholders[placeholder])
       })
       
       return html
