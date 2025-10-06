@@ -79,10 +79,18 @@ export function ContentGenerator() {
 
   // Convert LaTeX delimiters to markdown math format
   const convertLatexDelimiters = (content: string) => {
+    if (!content) return ''
+    
     // Convert display math \[ ... \] to $$ ... $$
-    let converted = content.replace(/\\\[([\s\S]*?)\\\]/g, (match, math) => `$$${math}$$`)
+    let converted = content.replace(/\\\[([\s\S]*?)\\\]/g, (match, math) => {
+      return '\n$$' + math + '$$\n'
+    })
+    
     // Convert inline math \( ... \) to $ ... $
-    converted = converted.replace(/\\\((.*?)\\\)/g, (match, math) => `$${math}$`)
+    converted = converted.replace(/\\\((.*?)\\\)/g, (match, math) => {
+      return '$' + math + '$'
+    })
+    
     return converted
   }
 

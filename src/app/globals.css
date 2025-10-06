@@ -60,7 +60,12 @@
 
 /* Prose styles for markdown preview */
 .prose {
-  color: #1f2937;
+  color: #1f2937 !important;
+  background-color: white !important;
+}
+
+.prose * {
+  color: inherit;
 }
 
 .prose h1 {
