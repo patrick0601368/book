@@ -238,14 +238,24 @@ app.post('/api/auth/login', async (req, res) => {
 // Generate content
 app.post('/api/generate-content', authenticateToken, async (req, res) => {
   try {
-    const { type, subject, topic, difficulty, provider = 'openai', customPrompt } = req.body;
+    const { type, subject, topic, difficulty, provider = 'openai', customPrompt, state, schoolType } = req.body;
 
     let prompt = '';
+
+    // Build context information
+    let contextInfo = '';
+    if (state) {
+      contextInfo += `State/Location: ${state}\n`;
+    }
+    if (schoolType) {
+      contextInfo += `School Type: ${schoolType}\n`;
+    }
 
     switch (type) {
       case 'learning-page':
         prompt = `Create a comprehensive learning page about "${topic}" in the subject of "${subject}".
         Difficulty level: ${difficulty}.
+        ${contextInfo ? `Context:\n${contextInfo}` : ''}
         Include:
         - Clear explanations
         - Key concepts
@@ -256,6 +266,7 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
 
       case 'exercise':
         prompt = `Create a ${difficulty} level exercise about "${topic}" in the subject of "${subject}".
+        ${contextInfo ? `Context:\n${contextInfo}` : ''}
         Include:
         - A clear question/problem
         - DO NOT include the solution
@@ -264,6 +275,7 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
 
       case 'exercise-with-solution':
         prompt = `Create a ${difficulty} level exercise with complete solution path about "${topic}" in the subject of "${subject}".
+        ${contextInfo ? `Context:\n${contextInfo}` : ''}
         Include:
         - A clear question/problem
         - Step-by-step solution path

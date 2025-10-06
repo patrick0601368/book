@@ -85,6 +85,8 @@ export class ApiClient {
     difficulty: string;
     provider?: string;
     customPrompt?: string;
+    state?: string;
+    schoolType?: string;
   }) {
     return this.request('/api/generate-content', {
       method: 'POST',
