@@ -82,17 +82,17 @@ export function ContentGenerator() {
       const renderer = new marked.Renderer()
       
       // Override code block rendering to prevent dark backgrounds
-      renderer.code = (code, language) => {
-        return `<pre class="bg-gray-100 text-gray-900 p-4 rounded"><code>${code}</code></pre>`
+      renderer.code = ({ text, lang, escaped }: any) => {
+        return `<pre class="bg-gray-100 text-gray-900 p-4 rounded"><code>${text}</code></pre>`
       }
       
       // Override inline code rendering - but preserve LaTeX
-      renderer.codespan = (code) => {
+      renderer.codespan = ({ text }: any) => {
         // Don't wrap LaTeX in code tags
-        if (code.includes('frac') || code.includes('sqrt') || code.includes('left') || code.includes('right')) {
-          return code
+        if (text.includes('frac') || text.includes('sqrt') || text.includes('left') || text.includes('right')) {
+          return text
         }
-        return `<code class="bg-pink-100 text-pink-700 px-1 rounded">${code}</code>`
+        return `<code class="bg-pink-100 text-pink-700 px-1 rounded">${text}</code>`
       }
       
       marked.setOptions({
