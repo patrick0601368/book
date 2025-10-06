@@ -551,11 +551,8 @@ export function ContentGenerator() {
               </div>
               <div>
                 <Label>Preview (Formatted)</Label>
-                <div className="w-full min-h-[500px] px-4 py-3 border border-gray-300 rounded-md bg-white overflow-auto">
-                  <ReactMarkdown 
-                    remarkPlugins={[remarkGfm]}
-                    className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900 prose-code:text-pink-600 prose-pre:bg-gray-100 prose-ul:my-4 prose-ol:my-4 prose-li:my-1"
-                  >
+                <div className="w-full min-h-[500px] px-4 py-3 border border-gray-300 rounded-md bg-white overflow-auto prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900 prose-code:text-pink-600 prose-pre:bg-gray-100 prose-ul:my-4 prose-ol:my-4 prose-li:my-1">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {editableContent}
                   </ReactMarkdown>
                 </div>
