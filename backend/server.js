@@ -65,6 +65,22 @@ const subjectSchema = new mongoose.Schema({
 
 const Subject = mongoose.model('Subject', subjectSchema);
 
+// State Schema
+const stateSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+}, { timestamps: true });
+
+const State = mongoose.model('State', stateSchema);
+
+// School Type Schema
+const schoolTypeSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+}, { timestamps: true });
+
+const SchoolType = mongoose.model('SchoolType', schoolTypeSchema);
+
 // Learning Page Schema
 const learningPageSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -403,6 +419,90 @@ app.delete('/api/subjects/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error deleting subject:', error);
     res.status(500).json({ message: 'Failed to delete subject' });
+  }
+});
+
+// Get all states for the user
+app.get('/api/states', authenticateToken, async (req, res) => {
+  try {
+    const states = await State.find({ userId: req.user.userId }).sort({ name: 1 });
+    res.json(states);
+  } catch (error) {
+    console.error('Error fetching states:', error);
+    res.status(500).json({ message: 'Failed to fetch states' });
+  }
+});
+
+// Create a new state
+app.post('/api/states', authenticateToken, async (req, res) => {
+  try {
+    const { name } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'State name is required' });
+    }
+
+    // Check if state already exists for this user
+    const existingState = await State.findOne({ 
+      name: name.trim(), 
+      userId: req.user.userId 
+    });
+
+    if (existingState) {
+      return res.status(400).json({ message: 'State already exists' });
+    }
+
+    const state = await State.create({
+      name: name.trim(),
+      userId: req.user.userId,
+    });
+
+    res.status(201).json(state);
+  } catch (error) {
+    console.error('Error creating state:', error);
+    res.status(500).json({ message: 'Failed to create state' });
+  }
+});
+
+// Get all school types for the user
+app.get('/api/school-types', authenticateToken, async (req, res) => {
+  try {
+    const schoolTypes = await SchoolType.find({ userId: req.user.userId }).sort({ name: 1 });
+    res.json(schoolTypes);
+  } catch (error) {
+    console.error('Error fetching school types:', error);
+    res.status(500).json({ message: 'Failed to fetch school types' });
+  }
+});
+
+// Create a new school type
+app.post('/api/school-types', authenticateToken, async (req, res) => {
+  try {
+    const { name } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'School type name is required' });
+    }
+
+    // Check if school type already exists for this user
+    const existingSchoolType = await SchoolType.findOne({ 
+      name: name.trim(), 
+      userId: req.user.userId 
+    });
+
+    if (existingSchoolType) {
+      return res.status(400).json({ message: 'School type already exists' });
+    }
+
+    const schoolType = await SchoolType.create({
+      name: name.trim(),
+      userId: req.user.userId,
+    });
+
+    res.status(201).json(schoolType);
+  } catch (error) {
+    console.error('Error creating school type:', error);
+    res.status(500).json({ message: 'Failed to create school type' });
   }
 });
 

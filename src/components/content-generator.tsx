@@ -15,6 +15,16 @@ interface Subject {
   description?: string
 }
 
+interface StateData {
+  _id: string
+  name: string
+}
+
+interface SchoolType {
+  _id: string
+  name: string
+}
+
 export function ContentGenerator() {
   const [formData, setFormData] = useState({
     subject: '',
@@ -22,13 +32,26 @@ export function ContentGenerator() {
     difficulty: 'beginner',
     type: 'learning-page',
     provider: 'openai',
+    state: '',
+    schoolType: '',
     customPrompt: ''
   })
   const [subjects, setSubjects] = useState<Subject[]>([])
+  const [states, setStates] = useState<StateData[]>([])
+  const [schoolTypes, setSchoolTypes] = useState<SchoolType[]>([])
+  
   const [isAddingNewSubject, setIsAddingNewSubject] = useState(false)
+  const [isAddingNewState, setIsAddingNewState] = useState(false)
+  const [isAddingNewSchoolType, setIsAddingNewSchoolType] = useState(false)
+  
   const [newSubject, setNewSubject] = useState('')
+  const [newState, setNewState] = useState('')
+  const [newSchoolType, setNewSchoolType] = useState('')
+  
   const [isGenerating, setIsGenerating] = useState(false)
   const [isLoadingSubjects, setIsLoadingSubjects] = useState(true)
+  const [isLoadingStates, setIsLoadingStates] = useState(true)
+  const [isLoadingSchoolTypes, setIsLoadingSchoolTypes] = useState(true)
   const [generatedContent, setGeneratedContent] = useState('')
   const [selectedProvider, setSelectedProvider] = useState('openai')
 
@@ -48,6 +71,38 @@ export function ContentGenerator() {
     fetchSubjects()
   }, [])
 
+  // Load states from database
+  useEffect(() => {
+    const fetchStates = async () => {
+      try {
+        const data = await apiClient.getStates()
+        setStates(data)
+      } catch (error) {
+        console.error('Failed to fetch states:', error)
+      } finally {
+        setIsLoadingStates(false)
+      }
+    }
+
+    fetchStates()
+  }, [])
+
+  // Load school types from database
+  useEffect(() => {
+    const fetchSchoolTypes = async () => {
+      try {
+        const data = await apiClient.getSchoolTypes()
+        setSchoolTypes(data)
+      } catch (error) {
+        console.error('Failed to fetch school types:', error)
+      } finally {
+        setIsLoadingSchoolTypes(false)
+      }
+    }
+
+    fetchSchoolTypes()
+  }, [])
+
   const handleAddSubject = async () => {
     if (newSubject.trim() && !subjects.find(s => s.name === newSubject.trim())) {
       try {
@@ -58,6 +113,34 @@ export function ContentGenerator() {
         setIsAddingNewSubject(false)
       } catch (error) {
         console.error('Failed to create subject:', error)
+      }
+    }
+  }
+
+  const handleAddState = async () => {
+    if (newState.trim() && !states.find(s => s.name === newState.trim())) {
+      try {
+        const newStateData = await apiClient.createState({ name: newState.trim() })
+        setStates([...states, newStateData])
+        setFormData({ ...formData, state: newStateData.name })
+        setNewState('')
+        setIsAddingNewState(false)
+      } catch (error) {
+        console.error('Failed to create state:', error)
+      }
+    }
+  }
+
+  const handleAddSchoolType = async () => {
+    if (newSchoolType.trim() && !schoolTypes.find(s => s.name === newSchoolType.trim())) {
+      try {
+        const newSchoolTypeData = await apiClient.createSchoolType({ name: newSchoolType.trim() })
+        setSchoolTypes([...schoolTypes, newSchoolTypeData])
+        setFormData({ ...formData, schoolType: newSchoolTypeData.name })
+        setNewSchoolType('')
+        setIsAddingNewSchoolType(false)
+      } catch (error) {
+        console.error('Failed to create school type:', error)
       }
     }
   }
@@ -162,15 +245,119 @@ export function ContentGenerator() {
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="customPrompt">Custom Instructions (Optional)</Label>
-              <textarea
-                id="customPrompt"
-                className="w-full min-h-[100px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Add specific instructions or requirements for the content generation..."
-                value={formData.customPrompt}
-                onChange={(e) => setFormData({ ...formData, customPrompt: e.target.value })}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="state">State (Optional)</Label>
+                {isAddingNewState ? (
+                  <div className="flex gap-2">
+                    <Input
+                      id="newState"
+                      placeholder="Enter state name"
+                      value={newState}
+                      onChange={(e) => setNewState(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddState())}
+                    />
+                    <Button type="button" onClick={handleAddState} size="sm">
+                      Add
+                    </Button>
+                    <Button 
+                      type="button" 
+                      onClick={() => setIsAddingNewState(false)} 
+                      variant="outline" 
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <Select
+                    value={formData.state}
+                    onValueChange={(value) => {
+                      if (value === 'add_new') {
+                        setIsAddingNewState(true)
+                      } else {
+                        setFormData({ ...formData, state: value })
+                      }
+                    }}
+                    disabled={isLoadingStates}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={isLoadingStates ? "Loading..." : "Select a state"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {states.length === 0 && !isLoadingStates && (
+                        <div className="px-2 py-1.5 text-sm text-gray-500">
+                          No states yet. Add one!
+                        </div>
+                      )}
+                      {states.map((state) => (
+                        <SelectItem key={state._id} value={state.name}>
+                          {state.name}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="add_new" className="text-blue-600 font-medium">
+                        + Add New State
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="schoolType">School Type (Optional)</Label>
+                {isAddingNewSchoolType ? (
+                  <div className="flex gap-2">
+                    <Input
+                      id="newSchoolType"
+                      placeholder="Enter school type"
+                      value={newSchoolType}
+                      onChange={(e) => setNewSchoolType(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSchoolType())}
+                    />
+                    <Button type="button" onClick={handleAddSchoolType} size="sm">
+                      Add
+                    </Button>
+                    <Button 
+                      type="button" 
+                      onClick={() => setIsAddingNewSchoolType(false)} 
+                      variant="outline" 
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <Select
+                    value={formData.schoolType}
+                    onValueChange={(value) => {
+                      if (value === 'add_new') {
+                        setIsAddingNewSchoolType(true)
+                      } else {
+                        setFormData({ ...formData, schoolType: value })
+                      }
+                    }}
+                    disabled={isLoadingSchoolTypes}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={isLoadingSchoolTypes ? "Loading..." : "Select school type"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {schoolTypes.length === 0 && !isLoadingSchoolTypes && (
+                        <div className="px-2 py-1.5 text-sm text-gray-500">
+                          No school types yet. Add one!
+                        </div>
+                      )}
+                      {schoolTypes.map((type) => (
+                        <SelectItem key={type._id} value={type.name}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="add_new" className="text-blue-600 font-medium">
+                        + Add New School Type
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -221,6 +408,17 @@ export function ContentGenerator() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="customPrompt">Custom Instructions (Optional)</Label>
+              <textarea
+                id="customPrompt"
+                className="w-full min-h-[100px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Add specific instructions or requirements for the content generation..."
+                value={formData.customPrompt}
+                onChange={(e) => setFormData({ ...formData, customPrompt: e.target.value })}
+              />
             </div>
 
             <Button type="submit" disabled={isGenerating} className="w-full">

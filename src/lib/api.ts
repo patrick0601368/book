@@ -114,6 +114,30 @@ export class ApiClient {
     });
   }
 
+  // State management
+  async getStates() {
+    return this.request('/api/states');
+  }
+
+  async createState(data: { name: string }) {
+    return this.request('/api/states', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // School type management
+  async getSchoolTypes() {
+    return this.request('/api/school-types');
+  }
+
+  async createSchoolType(data: { name: string }) {
+    return this.request('/api/school-types', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   // Health checks
   async healthCheck() {
     return this.request('/health');
