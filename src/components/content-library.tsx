@@ -8,16 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Search, FileText, BookOpen, ClipboardList, Eye, X } from 'lucide-react'
 import { apiClient } from '@/lib/api'
-import dynamic from 'next/dynamic'
+import ReactMarkdown from 'react-markdown'
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import remarkGfm from 'remark-gfm'
 import 'katex/dist/katex.min.css'
-
-const MarkdownPreview = dynamic(
-  () => import('@uiw/react-markdown-preview'),
-  { ssr: false }
-)
 
 interface Content {
   _id: string
@@ -71,6 +66,13 @@ export function ContentLibrary() {
   const [filterState, setFilterState] = useState('all')
   const [filterSchoolType, setFilterSchoolType] = useState('all')
   const [filterGrade, setFilterGrade] = useState('all')
+
+  // Convert LaTeX delimiters to markdown math format
+  const convertLatexDelimiters = (content: string) => {
+    let converted = content.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$1$$')
+    converted = converted.replace(/\\\((.*?)\\\)/g, '\$$1\$')
+    return converted
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -389,22 +391,15 @@ export function ContentLibrary() {
               </Button>
             </div>
 
-            <div className="flex-1 overflow-auto p-8">
-              <MarkdownPreview
-                source={selectedContent.content}
-                style={{
-                  backgroundColor: 'white',
-                  color: '#1f2937',
-                  padding: 0,
-                  fontSize: '16px',
-                  lineHeight: '1.75'
-                }}
-                wrapperElement={{
-                  "data-color-mode": "light"
-                }}
-                rehypePlugins={[[rehypeKatex, { strict: false, output: 'html' }]]}
-                remarkPlugins={[remarkMath, remarkGfm]}
-              />
+            <div className="flex-1 overflow-auto p-8 bg-white">
+              <div className="prose prose-lg max-w-none">
+                <ReactMarkdown
+                  remarkPlugins={[remarkMath, remarkGfm]}
+                  rehypePlugins={[rehypeKatex]}
+                >
+                  {convertLatexDelimiters(selectedContent.content)}
+                </ReactMarkdown>
+              </div>
             </div>
 
             <div className="p-4 border-t bg-gray-50">

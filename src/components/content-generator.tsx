@@ -77,6 +77,15 @@ export function ContentGenerator() {
   const [selectedProvider, setSelectedProvider] = useState('openai')
   const [showPreview, setShowPreview] = useState(false)
 
+  // Convert LaTeX delimiters to markdown math format
+  const convertLatexDelimiters = (content: string) => {
+    // Convert display math \[ ... \] to $$ ... $$
+    let converted = content.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$1$$')
+    // Convert inline math \( ... \) to $ ... $
+    converted = converted.replace(/\\\((.*?)\\\)/g, '\$$1\$')
+    return converted
+  }
+
   // Load subjects from database
   useEffect(() => {
     const fetchSubjects = async () => {
@@ -684,7 +693,7 @@ export function ContentGenerator() {
                       remarkPlugins={[remarkMath, remarkGfm]}
                       rehypePlugins={[rehypeKatex]}
                     >
-                      {editableContent}
+                      {convertLatexDelimiters(editableContent)}
                     </ReactMarkdown>
                   </div>
                 </div>
