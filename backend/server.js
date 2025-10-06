@@ -288,7 +288,15 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
         - Examples
         - Visual descriptions where helpful
         
-        IMPORTANT: Return ONLY the markdown content. Do NOT wrap it in code blocks or backticks. Use proper markdown formatting with headings (# ## ###), bold (**text**), italic (*text*), and LaTeX math notation using \\[ \\] for display math and \\( \\) for inline math.`;
+        CRITICAL FORMATTING RULES:
+        1. Return ONLY markdown content - NO code blocks, NO backticks wrapping the content
+        2. Use markdown: # for h1, ## for h2, **bold**, *italic*, numbered lists
+        3. For mathematical expressions, use EXACTLY these formats:
+           - Display math (centered): \\[ formula \\]
+           - Inline math (in text): \\( formula \\)
+        4. Example: The quadratic formula is \\[ x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} \\]
+        5. DO NOT use $ or $$ for math - ONLY use \\[ \\] and \\( \\)
+        6. DO NOT escape the backslashes - write \\[ not \\\\[`;
         break;
 
       case 'exercise':
@@ -298,7 +306,11 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
         - A clear question/problem
         - DO NOT include the solution
         
-        IMPORTANT: Return ONLY the markdown content. Do NOT wrap it in code blocks or backticks. Use proper markdown formatting and LaTeX math notation using \\[ \\] for display math and \\( \\) for inline math.`;
+        CRITICAL FORMATTING RULES:
+        1. Return ONLY markdown content - NO code blocks, NO backticks
+        2. For math: Display math \\[ formula \\], Inline math \\( formula \\)
+        3. DO NOT use $ or $$
+        4. DO NOT escape backslashes`;
         break;
 
       case 'exercise-with-solution':
@@ -310,7 +322,12 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
         - Detailed explanation of each step
         - Key concepts and reasoning
         
-        IMPORTANT: Return ONLY the markdown content. Do NOT wrap it in code blocks or backticks. Use proper markdown formatting with headings (# ## ###), bold (**text**), lists, and LaTeX math notation using \\[ \\] for display math and \\( \\) for inline math.`;
+        CRITICAL FORMATTING RULES:
+        1. Return ONLY markdown content - NO code blocks, NO backticks
+        2. For math: Display math \\[ formula \\], Inline math \\( formula \\)
+        3. Example: Step 1: Calculate \\[ D = b^2 - 4ac \\]
+        4. DO NOT use $ or $$
+        5. DO NOT escape backslashes`;
         break;
 
       default:
@@ -392,6 +409,19 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
     } else if (content.startsWith('```')) {
       content = content.replace(/^```\s*\n/, '').replace(/\n```\s*$/, '');
     }
+
+    // Fix double-escaped LaTeX delimiters that AI might produce
+    // Convert \\\\[ to \\[ and \\\\( to \\(
+    content = content.replace(/\\\\\\\\\[/g, '\\[');
+    content = content.replace(/\\\\\\\\\]/g, '\\]');
+    content = content.replace(/\\\\\\\\\(/g, '\\(');
+    content = content.replace(/\\\\\\\\\)/g, '\\)');
+    
+    // Also handle single extra escape
+    content = content.replace(/\\\\\[/g, '\\[');
+    content = content.replace(/\\\\\]/g, '\\]');
+    content = content.replace(/\\\\\(/g, '\\(');
+    content = content.replace(/\\\\\)/g, '\\)');
 
     res.json({ content, provider });
   } catch (error) {
