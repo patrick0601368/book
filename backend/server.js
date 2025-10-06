@@ -418,6 +418,26 @@ app.get('/api/content', authenticateToken, async (req, res) => {
   }
 });
 
+// Get content statistics for user
+app.get('/api/content/stats', authenticateToken, async (req, res) => {
+  try {
+    const contents = await Content.find({ userId: req.user.userId });
+    
+    const stats = {
+      totalContent: contents.length,
+      learningPages: contents.filter(c => c.type === 'learning-page').length,
+      exercises: contents.filter(c => c.type === 'exercise').length,
+      exercisesWithSolution: contents.filter(c => c.type === 'exercise-with-solution').length,
+      uniqueSubjects: [...new Set(contents.map(c => c.subject))].length,
+    };
+
+    res.json(stats);
+  } catch (error) {
+    console.error('Error fetching content stats:', error);
+    res.status(500).json({ message: 'Failed to fetch content stats' });
+  }
+});
+
 // Get user profile
 app.get('/api/user/profile', authenticateToken, async (req, res) => {
   try {

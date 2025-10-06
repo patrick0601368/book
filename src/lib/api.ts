@@ -110,6 +110,10 @@ export class ApiClient {
     });
   }
 
+  async getContentStats() {
+    return this.request('/api/content/stats');
+  }
+
   async getUserProfile() {
     return this.request('/api/user/profile');
   }
