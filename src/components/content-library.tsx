@@ -76,8 +76,12 @@ export function ContentLibrary() {
         return `<pre class="bg-gray-100 text-gray-900 p-4 rounded"><code>${code}</code></pre>`
       }
       
-      // Override inline code rendering
+      // Override inline code rendering - but preserve LaTeX
       renderer.codespan = (code) => {
+        // Don't wrap LaTeX in code tags
+        if (code.includes('frac') || code.includes('sqrt') || code.includes('left') || code.includes('right')) {
+          return code
+        }
         return `<code class="bg-pink-100 text-pink-700 px-1 rounded">${code}</code>`
       }
       
@@ -86,7 +90,8 @@ export function ContentLibrary() {
         gfm: true,
         headerIds: false,
         mangle: false,
-        renderer: renderer
+        renderer: renderer,
+        pedantic: false
       })
       
       const html = marked.parse(content) as string
@@ -99,10 +104,23 @@ export function ContentLibrary() {
 
   // Trigger MathJax rendering after content changes
   useEffect(() => {
-    if (selectedContent && typeof window !== 'undefined' && (window as any).MathJax) {
-      setTimeout(() => {
-        (window as any).MathJax.typesetPromise?.().catch((err: any) => console.error('MathJax error:', err))
-      }, 100)
+    if (selectedContent) {
+      const renderMath = () => {
+        if (typeof window !== 'undefined' && (window as any).MathJax) {
+          console.log('Triggering MathJax typeset for library...')
+          ;(window as any).MathJax.typesetPromise?.()
+            .then(() => console.log('MathJax rendering complete'))
+            .catch((err: any) => console.error('MathJax error:', err))
+        } else {
+          // MathJax not loaded yet, try again
+          setTimeout(renderMath, 500)
+        }
+      }
+      
+      // Initial render
+      setTimeout(renderMath, 100)
+      // Backup render
+      setTimeout(renderMath, 500)
     }
   }, [selectedContent])
 

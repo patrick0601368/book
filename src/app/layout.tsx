@@ -19,22 +19,30 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <Script id="mathjax-config" strategy="beforeInteractive">
+        <Script id="mathjax-config" strategy="afterInteractive">
           {`
             window.MathJax = {
               tex: { 
                 inlineMath: [['\\\\(', '\\\\)'], ['$', '$']],
-                displayMath: [['\\\\[', '\\\\]'], ['$$', '$$']]
+                displayMath: [['\\\\[', '\\\\]'], ['$$', '$$']],
+                processEscapes: true,
+                processEnvironments: true
               },
               options: {
-                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea']
+              },
+              startup: {
+                ready: () => {
+                  console.log('MathJax is loaded and ready');
+                  MathJax.startup.defaultReady();
+                }
               }
             };
           `}
         </Script>
         <Script
           src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
-          strategy="beforeInteractive"
+          strategy="afterInteractive"
         />
       </head>
       <body className={inter.className}>
