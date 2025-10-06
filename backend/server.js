@@ -101,6 +101,8 @@ const contentSchema = new mongoose.Schema({
   schoolType: { type: String },
   grade: { type: String },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  creatorName: { type: String }, // User's name who created the content
+  creatorEmail: { type: String }, // User's email who created the content
 }, { timestamps: true });
 
 const Content = mongoose.model('Content', contentSchema);
@@ -445,6 +447,12 @@ app.post('/api/content', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
+    // Get user information for creator details
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     const savedContent = await Content.create({
       title,
       content,
@@ -456,6 +464,8 @@ app.post('/api/content', authenticateToken, async (req, res) => {
       schoolType: schoolType || '',
       grade: grade || '',
       userId: req.user.userId,
+      creatorName: user.name,
+      creatorEmail: user.email,
     });
 
     res.status(201).json({

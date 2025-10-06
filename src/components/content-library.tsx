@@ -21,7 +21,10 @@ interface Content {
   state?: string
   schoolType?: string
   grade?: string
+  creatorName?: string
+  creatorEmail?: string
   createdAt: string
+  updatedAt?: string
 }
 
 interface Subject {
@@ -424,9 +427,16 @@ export function ContentLibrary() {
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-500 mt-2">
-                            Created {new Date(content.createdAt).toLocaleDateString()}
-                          </p>
+                          <div className="text-xs text-gray-500 mt-2 space-y-1">
+                            <p>
+                              Created {new Date(content.createdAt).toLocaleDateString()} at {new Date(content.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                            {content.creatorName && (
+                              <p className="flex items-center gap-1">
+                                <span className="font-medium">By:</span> {content.creatorName}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <Button
@@ -471,20 +481,28 @@ export function ContentLibrary() {
               />
             </div>
 
-            <div className="p-4 border-t bg-gray-50">
-              <div className="flex justify-between items-center">
-                <div className="flex flex-wrap gap-2">
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {selectedContent.subject}
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                    {selectedContent.difficulty}
-                  </span>
-                  {selectedContent.grade && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      Grade {selectedContent.grade}
+            <div className="p-4 border-t bg-gray-50 space-y-3">
+              <div className="flex justify-between items-start">
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {selectedContent.subject}
                     </span>
-                  )}
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                      {selectedContent.difficulty}
+                    </span>
+                    {selectedContent.grade && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Grade {selectedContent.grade}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    <p>Created: {new Date(selectedContent.createdAt).toLocaleDateString()} at {new Date(selectedContent.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                    {selectedContent.creatorName && (
+                      <p className="mt-1">Creator: <span className="font-medium">{selectedContent.creatorName}</span></p>
+                    )}
+                  </div>
                 </div>
                 <Button onClick={() => setSelectedContent(null)} variant="outline">
                   Close
