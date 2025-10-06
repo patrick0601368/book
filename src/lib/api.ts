@@ -87,6 +87,7 @@ export class ApiClient {
     customPrompt?: string;
     state?: string;
     schoolType?: string;
+    grade?: string;
   }) {
     return this.request('/api/generate-content', {
       method: 'POST',
@@ -103,6 +104,7 @@ export class ApiClient {
     type: string;
     state?: string;
     schoolType?: string;
+    grade?: string;
   }) {
     return this.request('/api/content', {
       method: 'POST',
@@ -155,6 +157,18 @@ export class ApiClient {
 
   async createSchoolType(data: { name: string }) {
     return this.request('/api/school-types', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Grade management
+  async getGrades() {
+    return this.request('/api/grades');
+  }
+
+  async createGrade(data: { name: string }) {
+    return this.request('/api/grades', {
       method: 'POST',
       body: JSON.stringify(data),
     });

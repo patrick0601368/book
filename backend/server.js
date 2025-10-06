@@ -81,6 +81,14 @@ const schoolTypeSchema = new mongoose.Schema({
 
 const SchoolType = mongoose.model('SchoolType', schoolTypeSchema);
 
+// Grade Schema
+const gradeSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+}, { timestamps: true });
+
+const Grade = mongoose.model('Grade', gradeSchema);
+
 // Content Schema (unified for all content types)
 const contentSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -91,6 +99,7 @@ const contentSchema = new mongoose.Schema({
   type: { type: String, required: true }, // 'learning-page', 'exercise', 'exercise-with-solution'
   state: { type: String },
   schoolType: { type: String },
+  grade: { type: String },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 }, { timestamps: true });
 
@@ -252,7 +261,7 @@ app.post('/api/auth/login', async (req, res) => {
 // Generate content
 app.post('/api/generate-content', authenticateToken, async (req, res) => {
   try {
-    const { type, subject, topic, difficulty, provider = 'openai', customPrompt, state, schoolType } = req.body;
+    const { type, subject, topic, difficulty, provider = 'openai', customPrompt, state, schoolType, grade } = req.body;
 
     let prompt = '';
 
@@ -263,6 +272,9 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
     }
     if (schoolType) {
       contextInfo += `School Type: ${schoolType}\n`;
+    }
+    if (grade) {
+      contextInfo += `Grade Level: ${grade}\n`;
     }
 
     switch (type) {
@@ -378,7 +390,7 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
 // Save generated content
 app.post('/api/content', authenticateToken, async (req, res) => {
   try {
-    const { title, content, subject, topic, difficulty, type, state, schoolType } = req.body;
+    const { title, content, subject, topic, difficulty, type, state, schoolType, grade } = req.body;
 
     if (!title || !content || !subject || !topic || !difficulty || !type) {
       return res.status(400).json({ message: 'Missing required fields' });
@@ -393,6 +405,7 @@ app.post('/api/content', authenticateToken, async (req, res) => {
       type,
       state: state || '',
       schoolType: schoolType || '',
+      grade: grade || '',
       userId: req.user.userId,
     });
 
@@ -592,6 +605,48 @@ app.post('/api/school-types', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error creating school type:', error);
     res.status(500).json({ message: 'Failed to create school type' });
+  }
+});
+
+// Get all grades for the user
+app.get('/api/grades', authenticateToken, async (req, res) => {
+  try {
+    const grades = await Grade.find({ userId: req.user.userId }).sort({ name: 1 });
+    res.json(grades);
+  } catch (error) {
+    console.error('Error fetching grades:', error);
+    res.status(500).json({ message: 'Failed to fetch grades' });
+  }
+});
+
+// Create a new grade
+app.post('/api/grades', authenticateToken, async (req, res) => {
+  try {
+    const { name } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'Grade name is required' });
+    }
+
+    // Check if grade already exists for this user
+    const existingGrade = await Grade.findOne({ 
+      name: name.trim(), 
+      userId: req.user.userId 
+    });
+
+    if (existingGrade) {
+      return res.status(400).json({ message: 'Grade already exists' });
+    }
+
+    const grade = await Grade.create({
+      name: name.trim(),
+      userId: req.user.userId,
+    });
+
+    res.status(201).json(grade);
+  } catch (error) {
+    console.error('Error creating grade:', error);
+    res.status(500).json({ message: 'Failed to create grade' });
   }
 });
 

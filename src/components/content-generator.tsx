@@ -10,7 +10,10 @@ import { Loader2, Sparkles, CheckCircle2 } from 'lucide-react'
 import { apiClient } from '@/lib/api'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
 import { useToast } from '@/hooks/use-toast'
+import 'katex/dist/katex.min.css'
 
 interface Subject {
   _id: string
@@ -28,6 +31,11 @@ interface SchoolType {
   name: string
 }
 
+interface Grade {
+  _id: string
+  name: string
+}
+
 export function ContentGenerator() {
   const { toast } = useToast()
   const [formData, setFormData] = useState({
@@ -38,19 +46,23 @@ export function ContentGenerator() {
     provider: 'openai',
     state: '',
     schoolType: '',
+    grade: '',
     customPrompt: ''
   })
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [states, setStates] = useState<StateData[]>([])
   const [schoolTypes, setSchoolTypes] = useState<SchoolType[]>([])
+  const [grades, setGrades] = useState<Grade[]>([])
   
   const [isAddingNewSubject, setIsAddingNewSubject] = useState(false)
   const [isAddingNewState, setIsAddingNewState] = useState(false)
   const [isAddingNewSchoolType, setIsAddingNewSchoolType] = useState(false)
+  const [isAddingNewGrade, setIsAddingNewGrade] = useState(false)
   
   const [newSubject, setNewSubject] = useState('')
   const [newState, setNewState] = useState('')
   const [newSchoolType, setNewSchoolType] = useState('')
+  const [newGrade, setNewGrade] = useState('')
   
   const [isGenerating, setIsGenerating] = useState(false)
   const [isRefining, setIsRefining] = useState(false)
@@ -58,6 +70,7 @@ export function ContentGenerator() {
   const [isLoadingSubjects, setIsLoadingSubjects] = useState(true)
   const [isLoadingStates, setIsLoadingStates] = useState(true)
   const [isLoadingSchoolTypes, setIsLoadingSchoolTypes] = useState(true)
+  const [isLoadingGrades, setIsLoadingGrades] = useState(true)
   const [generatedContent, setGeneratedContent] = useState('')
   const [editableContent, setEditableContent] = useState('')
   const [refinementPrompt, setRefinementPrompt] = useState('')
@@ -112,6 +125,22 @@ export function ContentGenerator() {
     fetchSchoolTypes()
   }, [])
 
+  // Load grades from database
+  useEffect(() => {
+    const fetchGrades = async () => {
+      try {
+        const data = await apiClient.getGrades()
+        setGrades(data)
+      } catch (error) {
+        console.error('Failed to fetch grades:', error)
+      } finally {
+        setIsLoadingGrades(false)
+      }
+    }
+
+    fetchGrades()
+  }, [])
+
   const handleAddSubject = async () => {
     if (newSubject.trim() && !subjects.find(s => s.name === newSubject.trim())) {
       try {
@@ -150,6 +179,20 @@ export function ContentGenerator() {
         setIsAddingNewSchoolType(false)
       } catch (error) {
         console.error('Failed to create school type:', error)
+      }
+    }
+  }
+
+  const handleAddGrade = async () => {
+    if (newGrade.trim() && !grades.find(g => g.name === newGrade.trim())) {
+      try {
+        const newGradeData = await apiClient.createGrade({ name: newGrade.trim() })
+        setGrades([...grades, newGradeData])
+        setFormData({ ...formData, grade: newGradeData.name })
+        setNewGrade('')
+        setIsAddingNewGrade(false)
+      } catch (error) {
+        console.error('Failed to create grade:', error)
       }
     }
   }
@@ -205,6 +248,7 @@ export function ContentGenerator() {
         type: formData.type,
         state: formData.state,
         schoolType: formData.schoolType,
+        grade: formData.grade,
       })
       
       // Show success toast
@@ -441,6 +485,63 @@ export function ContentGenerator() {
               </div>
             </div>
 
+            <div>
+              <Label htmlFor="grade">Grade (Optional)</Label>
+              {isAddingNewGrade ? (
+                <div className="flex gap-2">
+                  <Input
+                    id="newGrade"
+                    placeholder="Enter grade (e.g., 5th Grade, High School)"
+                    value={newGrade}
+                    onChange={(e) => setNewGrade(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddGrade())}
+                  />
+                  <Button type="button" onClick={handleAddGrade} size="sm">
+                    Add
+                  </Button>
+                  <Button 
+                    type="button" 
+                    onClick={() => setIsAddingNewGrade(false)} 
+                    variant="outline" 
+                    size="sm"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Select
+                  value={formData.grade}
+                  onValueChange={(value) => {
+                    if (value === 'add_new') {
+                      setIsAddingNewGrade(true)
+                    } else {
+                      setFormData({ ...formData, grade: value })
+                    }
+                  }}
+                  disabled={isLoadingGrades}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={isLoadingGrades ? "Loading..." : "Select grade level"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {grades.length === 0 && !isLoadingGrades && (
+                      <div className="px-2 py-1.5 text-sm text-gray-500">
+                        No grades yet. Add one!
+                      </div>
+                    )}
+                    {grades.map((grade) => (
+                      <SelectItem key={grade._id} value={grade.name}>
+                        {grade.name}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="add_new" className="text-blue-600 font-medium">
+                      + Add New Grade
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="difficulty">Difficulty Level</Label>
@@ -552,7 +653,10 @@ export function ContentGenerator() {
               <div>
                 <Label>Preview (Formatted)</Label>
                 <div className="w-full min-h-[500px] px-4 py-3 border border-gray-300 rounded-md bg-white overflow-auto prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900 prose-code:text-pink-600 prose-pre:bg-gray-100 prose-ul:my-4 prose-ol:my-4 prose-li:my-1">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                  >
                     {editableContent}
                   </ReactMarkdown>
                 </div>
