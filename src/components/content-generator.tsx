@@ -679,34 +679,14 @@ export function ContentGenerator() {
                   <Label className="text-sm font-semibold">Preview (Formatted)</Label>
                 </div>
                 <div className="flex-1 overflow-auto px-8 py-6 bg-white">
-                  <article className="prose prose-lg max-w-none
-                    prose-headings:font-bold prose-headings:text-gray-900
-                    prose-h1:text-3xl prose-h1:mb-4 prose-h1:mt-6 prose-h1:border-b prose-h1:pb-2
-                    prose-h2:text-2xl prose-h2:mb-3 prose-h2:mt-5 prose-h2:border-b prose-h2:pb-1
-                    prose-h3:text-xl prose-h3:mb-2 prose-h3:mt-4 prose-h3:font-semibold
-                    prose-p:text-gray-800 prose-p:leading-relaxed prose-p:mb-4 prose-p:text-base
-                    prose-strong:text-gray-900 prose-strong:font-bold
-                    prose-em:italic prose-em:text-gray-800
-                    prose-ul:list-disc prose-ul:pl-6 prose-ul:mb-4 prose-ul:space-y-2
-                    prose-ol:list-decimal prose-ol:pl-6 prose-ol:mb-4 prose-ol:space-y-2
-                    prose-li:text-gray-800 prose-li:leading-relaxed
-                    prose-a:text-blue-600 prose-a:underline prose-a:hover:text-blue-800
-                    prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-700
-                    prose-code:text-pink-600 prose-code:bg-pink-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
-                    prose-pre:bg-gray-900 prose-pre:text-white prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-pre:my-4
-                    prose-table:border-collapse prose-table:w-full prose-table:my-6
-                    prose-th:border prose-th:border-gray-300 prose-th:bg-gray-100 prose-th:p-3 prose-th:font-bold prose-th:text-left
-                    prose-td:border prose-td:border-gray-300 prose-td:p-3
-                    prose-img:rounded-lg prose-img:shadow-md prose-img:my-6
-                    prose-hr:border-gray-300 prose-hr:my-6
-                  ">
+                  <div className="prose prose-lg max-w-none">
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm, remarkMath]}
                       rehypePlugins={[rehypeKatex]}
                     >
                       {editableContent}
                     </ReactMarkdown>
-                  </article>
+                  </div>
                 </div>
               </div>
             </div>
