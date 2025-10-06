@@ -78,6 +78,26 @@ export function ContentGenerator() {
     if (!content) return ''
     
     try {
+      // Step 1: Protect LaTeX from markdown parser by replacing with placeholders
+      const latexPlaceholders: { [key: string]: string } = {}
+      let placeholderIndex = 0
+      
+      // Protect display math \[ ... \]
+      let protected = content.replace(/\\\[([\s\S]*?)\\\]/g, (match) => {
+        const placeholder = `___LATEX_DISPLAY_${placeholderIndex}___`
+        latexPlaceholders[placeholder] = match
+        placeholderIndex++
+        return placeholder
+      })
+      
+      // Protect inline math \( ... \)
+      protected = protected.replace(/\\\((.*?)\\\)/g, (match) => {
+        const placeholder = `___LATEX_INLINE_${placeholderIndex}___`
+        latexPlaceholders[placeholder] = match
+        placeholderIndex++
+        return placeholder
+      })
+      
       // Configure marked with custom renderer
       const renderer = new marked.Renderer()
       
@@ -86,12 +106,8 @@ export function ContentGenerator() {
         return `<pre class="bg-gray-100 text-gray-900 p-4 rounded"><code>${text}</code></pre>`
       }
       
-      // Override inline code rendering - but preserve LaTeX
+      // Override inline code rendering
       renderer.codespan = ({ text }: any) => {
-        // Don't wrap LaTeX in code tags
-        if (text.includes('frac') || text.includes('sqrt') || text.includes('left') || text.includes('right')) {
-          return text
-        }
         return `<code class="bg-pink-100 text-pink-700 px-1 rounded">${text}</code>`
       }
       
@@ -101,7 +117,14 @@ export function ContentGenerator() {
         renderer: renderer
       })
       
-      const html = marked.parse(content) as string
+      // Step 2: Parse markdown
+      let html = marked.parse(protected) as string
+      
+      // Step 3: Restore LaTeX placeholders
+      Object.keys(latexPlaceholders).forEach(placeholder => {
+        html = html.replace(placeholder, latexPlaceholders[placeholder])
+      })
+      
       return html
     } catch (error) {
       console.error('Rendering error:', error)
