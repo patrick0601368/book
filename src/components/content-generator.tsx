@@ -83,7 +83,7 @@ export function ContentGenerator() {
       let placeholderIndex = 0
       
       // Protect display math \[ ... \]
-      let protected = content.replace(/\\\[([\s\S]*?)\\\]/g, (match) => {
+      let protectedContent = content.replace(/\\\[([\s\S]*?)\\\]/g, (match) => {
         const placeholder = `___LATEX_DISPLAY_${placeholderIndex}___`
         latexPlaceholders[placeholder] = match
         placeholderIndex++
@@ -91,7 +91,7 @@ export function ContentGenerator() {
       })
       
       // Protect inline math \( ... \)
-      protected = protected.replace(/\\\((.*?)\\\)/g, (match) => {
+      protectedContent = protectedContent.replace(/\\\((.*?)\\\)/g, (match) => {
         const placeholder = `___LATEX_INLINE_${placeholderIndex}___`
         latexPlaceholders[placeholder] = match
         placeholderIndex++
@@ -118,7 +118,7 @@ export function ContentGenerator() {
       })
       
       // Step 2: Parse markdown
-      let html = marked.parse(protected) as string
+      let html = marked.parse(protectedContent) as string
       
       // Step 3: Restore LaTeX placeholders
       Object.keys(latexPlaceholders).forEach(placeholder => {
