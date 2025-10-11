@@ -46,12 +46,23 @@ const connectDB = async () => {
   }
 };
 
+// Organization Schema
+const organizationSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  description: { type: String },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+}, { timestamps: true });
+
+const Organization = mongoose.model('Organization', organizationSchema);
+
 // User Schema
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   password: { type: String, required: true },
   image: { type: String },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
+  role: { type: String, enum: ['admin', 'member'], default: 'member' }, // admin can manage organization
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);
@@ -478,10 +489,23 @@ app.post('/api/content', authenticateToken, async (req, res) => {
   }
 });
 
-// Get all saved content for user
+// Get all saved content for user (including organization members)
 app.get('/api/content', authenticateToken, async (req, res) => {
   try {
-    const contents = await Content.find({ userId: req.user.userId })
+    const user = await User.findById(req.user.userId);
+    
+    let query;
+    if (user.organizationId) {
+      // If user belongs to an organization, get content from all organization members
+      const orgMembers = await User.find({ organizationId: user.organizationId }).select('_id');
+      const memberIds = orgMembers.map(m => m._id);
+      query = { userId: { $in: memberIds } };
+    } else {
+      // If no organization, only get user's own content
+      query = { userId: req.user.userId };
+    }
+    
+    const contents = await Content.find(query)
       .sort({ createdAt: -1 });
     res.json(contents);
   } catch (error) {
@@ -490,10 +514,21 @@ app.get('/api/content', authenticateToken, async (req, res) => {
   }
 });
 
-// Get content statistics for user
+// Get content statistics for user (including organization)
 app.get('/api/content/stats', authenticateToken, async (req, res) => {
   try {
-    const contents = await Content.find({ userId: req.user.userId });
+    const user = await User.findById(req.user.userId);
+    
+    let query;
+    if (user.organizationId) {
+      const orgMembers = await User.find({ organizationId: user.organizationId }).select('_id');
+      const memberIds = orgMembers.map(m => m._id);
+      query = { userId: { $in: memberIds } };
+    } else {
+      query = { userId: req.user.userId };
+    }
+    
+    const contents = await Content.find(query);
     
     const stats = {
       totalContent: contents.length,
@@ -706,6 +741,130 @@ app.post('/api/grades', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error creating grade:', error);
     res.status(500).json({ message: 'Failed to create grade' });
+  }
+});
+
+// Organization Management Endpoints
+
+// Create a new organization
+app.post('/api/organizations', authenticateToken, async (req, res) => {
+  try {
+    const { name, description } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'Organization name is required' });
+    }
+
+    const organization = await Organization.create({
+      name: name.trim(),
+      description: description || '',
+      createdBy: req.user.userId,
+    });
+
+    // Update user to be admin of this organization
+    await User.findByIdAndUpdate(req.user.userId, {
+      organizationId: organization._id,
+      role: 'admin'
+    });
+
+    res.status(201).json({
+      message: 'Organization created successfully',
+      organization
+    });
+  } catch (error) {
+    console.error('Error creating organization:', error);
+    res.status(500).json({ message: 'Failed to create organization' });
+  }
+});
+
+// Get user's organization info
+app.get('/api/organizations/my', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).populate('organizationId');
+    
+    if (!user.organizationId) {
+      return res.json({ organization: null });
+    }
+
+    // Get organization members
+    const members = await User.find({ organizationId: user.organizationId })
+      .select('name email role createdAt')
+      .sort({ createdAt: 1 });
+
+    res.json({
+      organization: user.organizationId,
+      members,
+      userRole: user.role
+    });
+  } catch (error) {
+    console.error('Error fetching organization:', error);
+    res.status(500).json({ message: 'Failed to fetch organization' });
+  }
+});
+
+// Join an organization by ID
+app.post('/api/organizations/join', authenticateToken, async (req, res) => {
+  try {
+    const { organizationId } = req.body;
+
+    if (!organizationId) {
+      return res.status(400).json({ message: 'Organization ID is required' });
+    }
+
+    const organization = await Organization.findById(organizationId);
+    if (!organization) {
+      return res.status(404).json({ message: 'Organization not found' });
+    }
+
+    // Update user's organization
+    await User.findByIdAndUpdate(req.user.userId, {
+      organizationId: organization._id,
+      role: 'member'
+    });
+
+    res.json({
+      message: 'Successfully joined organization',
+      organization
+    });
+  } catch (error) {
+    console.error('Error joining organization:', error);
+    res.status(500).json({ message: 'Failed to join organization' });
+  }
+});
+
+// Leave organization
+app.post('/api/organizations/leave', authenticateToken, async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.user.userId, {
+      $unset: { organizationId: 1 },
+      role: 'member'
+    });
+
+    res.json({ message: 'Successfully left organization' });
+  } catch (error) {
+    console.error('Error leaving organization:', error);
+    res.status(500).json({ message: 'Failed to leave organization' });
+  }
+});
+
+// Remove member from organization (admin only)
+app.delete('/api/organizations/members/:userId', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    
+    if (user.role !== 'admin') {
+      return res.status(403).json({ message: 'Only admins can remove members' });
+    }
+
+    await User.findByIdAndUpdate(req.params.userId, {
+      $unset: { organizationId: 1 },
+      role: 'member'
+    });
+
+    res.json({ message: 'Member removed successfully' });
+  } catch (error) {
+    console.error('Error removing member:', error);
+    res.status(500).json({ message: 'Failed to remove member' });
   }
 });
 

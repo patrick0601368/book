@@ -205,6 +205,37 @@ export class ApiClient {
   isAuthenticated() {
     return !!this.token;
   }
+
+  // Organization endpoints
+  async createOrganization(name: string, description?: string) {
+    return this.request('/api/organizations', {
+      method: 'POST',
+      body: JSON.stringify({ name, description }),
+    });
+  }
+
+  async getMyOrganization() {
+    return this.request('/api/organizations/my');
+  }
+
+  async joinOrganization(organizationId: string) {
+    return this.request('/api/organizations/join', {
+      method: 'POST',
+      body: JSON.stringify({ organizationId }),
+    });
+  }
+
+  async leaveOrganization() {
+    return this.request('/api/organizations/leave', {
+      method: 'POST',
+    });
+  }
+
+  async removeMember(userId: string) {
+    return this.request(`/api/organizations/members/${userId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const apiClient = new ApiClient();
