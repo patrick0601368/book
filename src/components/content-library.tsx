@@ -28,6 +28,7 @@ interface Content {
   grade?: string
   language?: string
   country?: string
+  basedOnId?: string
   creatorName?: string
   creatorEmail?: string
   createdAt: string
@@ -458,6 +459,9 @@ export function ContentLibrary() {
         state: generateForm.state,
         schoolType: generateForm.schoolType,
         grade: generateForm.grade,
+        language: generateForm.language,
+        country: generateForm.country,
+        basedOnId: baseContent?._id, // Store the ID of the content this was based on
       })
       
       toast({
@@ -751,6 +755,22 @@ export function ContentLibrary() {
                     <p>Created: {new Date(selectedContent.createdAt).toLocaleDateString()} at {new Date(selectedContent.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                     {selectedContent.creatorName && (
                       <p className="mt-1">Creator: <span className="font-medium">{selectedContent.creatorName}</span></p>
+                    )}
+                    {selectedContent.basedOnId && (
+                      <p className="mt-1">
+                        Based on: 
+                        <button 
+                          onClick={() => {
+                            const sourceContent = contents.find(c => c._id === selectedContent.basedOnId)
+                            if (sourceContent) {
+                              setSelectedContent(sourceContent)
+                            }
+                          }}
+                          className="ml-1 text-blue-600 hover:text-blue-800 underline font-medium"
+                        >
+                          {selectedContent.basedOnId.substring(0, 8)}...
+                        </button>
+                      </p>
                     )}
                   </div>
                 </div>
