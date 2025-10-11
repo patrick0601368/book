@@ -382,7 +382,7 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
             content: prompt
           }
         ],
-        max_tokens: 8000,
+        max_tokens: 3500,
         temperature: 0.7,
       }, {
         headers: {
@@ -417,7 +417,7 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
             content: prompt
           }
         ],
-        max_tokens: 8000,
+        max_tokens: 3500,
         temperature: 0.7,
       });
 
