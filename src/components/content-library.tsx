@@ -193,7 +193,15 @@ export function ContentLibrary() {
         if (typeof window !== 'undefined' && (window as any).MathJax) {
           console.log('Triggering MathJax typeset for generated content preview...')
           ;(window as any).MathJax.typesetPromise?.()
-            .then(() => console.log('MathJax rendering complete'))
+            .then(() => {
+              console.log('MathJax rendering complete')
+              // Extra render after 1 second to catch any missed elements
+              setTimeout(() => {
+                ;(window as any).MathJax.typesetPromise?.()
+                  .then(() => console.log('MathJax second pass complete'))
+                  .catch((err: any) => console.error('MathJax second pass error:', err))
+              }, 1000)
+            })
             .catch((err: any) => console.error('MathJax error:', err))
         } else {
           setTimeout(renderMath, 500)
