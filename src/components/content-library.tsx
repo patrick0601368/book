@@ -308,7 +308,7 @@ export function ContentLibrary() {
   const handleAddState = async () => {
     if (!newState.trim()) return
     try {
-      await apiClient.createState(newState)
+      await apiClient.createState({ name: newState })
       const statesData = await apiClient.getStates()
       setStates(statesData)
       setGenerateForm({ ...generateForm, state: newState })
@@ -323,7 +323,7 @@ export function ContentLibrary() {
   const handleAddSchoolType = async () => {
     if (!newSchoolType.trim()) return
     try {
-      await apiClient.createSchoolType(newSchoolType)
+      await apiClient.createSchoolType({ name: newSchoolType })
       const schoolTypesData = await apiClient.getSchoolTypes()
       setSchoolTypes(schoolTypesData)
       setGenerateForm({ ...generateForm, schoolType: newSchoolType })
@@ -338,7 +338,7 @@ export function ContentLibrary() {
   const handleAddGrade = async () => {
     if (!newGrade.trim()) return
     try {
-      await apiClient.createGrade(newGrade)
+      await apiClient.createGrade({ name: newGrade })
       const gradesData = await apiClient.getGrades()
       setGrades(gradesData)
       setGenerateForm({ ...generateForm, grade: newGrade })
