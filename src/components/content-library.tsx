@@ -188,29 +188,25 @@ export function ContentLibrary() {
 
   // Trigger MathJax for generated content preview
   useEffect(() => {
-    if (generatedNewContent && showGenerateModal) {
+    if (showGenerateModal && generatedNewContent) {
       const renderMath = () => {
         if (typeof window !== 'undefined' && (window as any).MathJax) {
           console.log('Triggering MathJax typeset for generated content preview...')
           ;(window as any).MathJax.typesetPromise?.()
-            .then(() => {
-              console.log('MathJax rendering complete')
-              // Extra render after 1 second to catch any missed elements
-              setTimeout(() => {
-                ;(window as any).MathJax.typesetPromise?.()
-                  .then(() => console.log('MathJax second pass complete'))
-                  .catch((err: any) => console.error('MathJax second pass error:', err))
-              }, 1000)
-            })
+            .then(() => console.log('MathJax rendering complete'))
             .catch((err: any) => console.error('MathJax error:', err))
         } else {
+          // MathJax not loaded yet, try again
           setTimeout(renderMath, 500)
         }
       }
+      
+      // Initial render
       setTimeout(renderMath, 100)
+      // Backup render
       setTimeout(renderMath, 500)
     }
-  }, [generatedNewContent, showGenerateModal, editableContent])
+  }, [showGenerateModal, editableContent])
 
   useEffect(() => {
     const fetchData = async () => {
