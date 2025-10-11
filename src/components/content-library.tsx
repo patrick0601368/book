@@ -178,51 +178,73 @@ export function ContentLibrary() {
   useEffect(() => {
     if (!selectedContent) return
 
-    let timeoutId1: NodeJS.Timeout
-    let timeoutId2: NodeJS.Timeout
     let cancelled = false
 
-    const renderMath = () => {
+    const renderMath = async () => {
       if (cancelled) return
       
       if (typeof window !== 'undefined' && (window as any).MathJax) {
-        console.log('Triggering MathJax typeset for library...')
-        const element = document.getElementById('content-library-preview')
-        if (element) {
-          ;(window as any).MathJax.typesetClear?.([element])
-          ;(window as any).MathJax.typesetPromise?.([element])
-            .then(() => console.log('MathJax rendering complete'))
-            .catch((err: any) => console.error('MathJax error:', err))
+        try {
+          const element = document.getElementById('content-library-preview')
+          if (element) {
+            console.log('Triggering MathJax for library preview...')
+            // Wait for MathJax to be ready
+            await (window as any).MathJax.startup?.promise
+            // Clear any previous typesetting
+            ;(window as any).MathJax.typesetClear?.([element])
+            // Typeset the new content
+            await (window as any).MathJax.typesetPromise?.([element])
+            console.log('MathJax rendering complete for library')
+          }
+        } catch (err) {
+          console.error('MathJax error:', err)
         }
       }
     }
     
-    // Wait for content to be in DOM
-    timeoutId1 = setTimeout(renderMath, 100)
-    timeoutId2 = setTimeout(renderMath, 500)
+    // Single render after a short delay for DOM to be ready
+    const timeoutId = setTimeout(renderMath, 150)
 
     return () => {
       cancelled = true
-      clearTimeout(timeoutId1)
-      clearTimeout(timeoutId2)
+      clearTimeout(timeoutId)
     }
   }, [selectedContent])
 
   // Trigger MathJax for generated content preview
   useEffect(() => {
-    if (generatedNewContent && showGenerateModal) {
-      const renderMath = () => {
-        if (typeof window !== 'undefined' && (window as any).MathJax) {
-          console.log('Triggering MathJax typeset for generated content preview...')
-          ;(window as any).MathJax.typesetPromise?.()
-            .then(() => console.log('MathJax rendering complete'))
-            .catch((err: any) => console.error('MathJax error:', err))
-        } else {
-          setTimeout(renderMath, 500)
+    if (!generatedNewContent || !showGenerateModal) return
+
+    let cancelled = false
+
+    const renderMath = async () => {
+      if (cancelled) return
+      
+      if (typeof window !== 'undefined' && (window as any).MathJax) {
+        try {
+          const element = document.getElementById('generated-content-preview')
+          if (element) {
+            console.log('Triggering MathJax for generated content preview...')
+            // Wait for MathJax to be ready
+            await (window as any).MathJax.startup?.promise
+            // Clear any previous typesetting
+            ;(window as any).MathJax.typesetClear?.([element])
+            // Typeset the new content
+            await (window as any).MathJax.typesetPromise?.([element])
+            console.log('MathJax rendering complete for generated content')
+          }
+        } catch (err) {
+          console.error('MathJax error:', err)
         }
       }
-      setTimeout(renderMath, 100)
-      setTimeout(renderMath, 500)
+    }
+    
+    // Single render after a short delay for DOM to be ready
+    const timeoutId = setTimeout(renderMath, 150)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timeoutId)
     }
   }, [generatedNewContent, showGenerateModal, editableContent])
 
@@ -1195,6 +1217,7 @@ export function ContentLibrary() {
               </div>
               <div className="flex-1 overflow-auto px-8 py-6 bg-white">
                 <div 
+                  id="generated-content-preview"
                   className="prose prose-lg max-w-none"
                   dangerouslySetInnerHTML={{ __html: renderMarkdown(editableContent) }}
                 />
