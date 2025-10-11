@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Search, FileText, BookOpen, ClipboardList, Eye, X, Sparkles } from 'lucide-react'
+import { Loader2, Search, FileText, BookOpen, ClipboardList, Eye, X, Sparkles, CheckCircle2 } from 'lucide-react'
 import { apiClient } from '@/lib/api'
 import { marked } from 'marked'
 import { useToast } from '@/hooks/use-toast'
@@ -64,6 +64,8 @@ export function ContentLibrary() {
   const [generatedNewContent, setGeneratedNewContent] = useState('')
   const [editableContent, setEditableContent] = useState('')
   const [showPreview, setShowPreview] = useState(false)
+  const [refinementPrompt, setRefinementPrompt] = useState('')
+  const [isRefining, setIsRefining] = useState(false)
   const [baseContent, setBaseContent] = useState<Content | null>(null) // Store the original content
   
   // Form data for generation based on existing content
@@ -352,6 +354,37 @@ export function ContentLibrary() {
     }
   }
 
+  const handleRefine = async () => {
+    if (!refinementPrompt.trim()) return
+
+    try {
+      setIsRefining(true)
+      
+      const requestData = {
+        ...generateForm,
+        customPrompt: `${refinementPrompt}\n\nCurrent content to refine:\n\n${editableContent}`
+      }
+      
+      const data = await apiClient.generateContent(requestData)
+      setEditableContent(data.content)
+      setRefinementPrompt('')
+      
+      toast({
+        title: "Refined!",
+        description: "Content has been refined based on your instructions"
+      })
+    } catch (error) {
+      console.error('Error refining content:', error)
+      toast({
+        title: "Error",
+        description: "Failed to refine content",
+        variant: "destructive"
+      })
+    } finally {
+      setIsRefining(false)
+    }
+  }
+
   const handleSaveGeneratedContent = async () => {
     try {
       await apiClient.saveContent({
@@ -376,6 +409,7 @@ export function ContentLibrary() {
       setGeneratedNewContent('')
       setEditableContent('')
       setShowPreview(false)
+      setRefinementPrompt('')
       setBaseContent(null)
       setGenerateForm({
         subject: '',
@@ -674,7 +708,7 @@ export function ContentLibrary() {
       )}
 
       {/* Generate Based On Modal */}
-      {showGenerateModal && (
+      {showGenerateModal && !generatedNewContent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-4 border-b">
@@ -685,6 +719,7 @@ export function ContentLibrary() {
                   setGeneratedNewContent('')
                   setEditableContent('')
                   setShowPreview(false)
+                  setRefinementPrompt('')
                   setBaseContent(null)
                 }}
                 variant="ghost"
@@ -695,184 +730,222 @@ export function ContentLibrary() {
             </div>
 
             <div className="flex-1 overflow-auto p-6 space-y-4">
-              {!generatedNewContent ? (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Subject</Label>
-                      <Input
-                        value={generateForm.subject}
-                        onChange={(e) => setGenerateForm({ ...generateForm, subject: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <Label>Topic</Label>
-                      <Input
-                        value={generateForm.topic}
-                        onChange={(e) => setGenerateForm({ ...generateForm, topic: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Difficulty</Label>
-                      <Select
-                        value={generateForm.difficulty}
-                        onValueChange={(value) => setGenerateForm({ ...generateForm, difficulty: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="beginner">Beginner</SelectItem>
-                          <SelectItem value="intermediate">Intermediate</SelectItem>
-                          <SelectItem value="advanced">Advanced</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Content Type</Label>
-                      <Select
-                        value={generateForm.type}
-                        onValueChange={(value) => setGenerateForm({ ...generateForm, type: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="learning-page">Learning Page</SelectItem>
-                          <SelectItem value="exercise">Exercise</SelectItem>
-                          <SelectItem value="exercise-with-solution">Exercise with Solution</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>AI Provider</Label>
-                    <Select
-                      value={generateForm.provider}
-                      onValueChange={(value) => setGenerateForm({ ...generateForm, provider: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="openai">OpenAI (GPT-4)</SelectItem>
-                        <SelectItem value="mistral">Mistral AI</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label>Additional Instructions</Label>
-                    <textarea
-                      className="w-full min-h-[150px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={generateForm.customPrompt}
-                      onChange={(e) => setGenerateForm({ ...generateForm, customPrompt: e.target.value })}
-                      placeholder="Generate more like this"
-                    />
-                  </div>
-                </>
-              ) : (
-                <div className="h-[600px] border rounded-lg overflow-hidden bg-white flex flex-col">
-                  {/* Tabs */}
-                  <div className="flex border-b bg-gray-50">
-                    <button
-                      onClick={() => setShowPreview(false)}
-                      className={`flex-1 px-4 py-2 text-sm font-medium ${
-                        !showPreview
-                          ? 'bg-white border-b-2 border-blue-500 text-blue-600'
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Editor
-                    </button>
-                    <button
-                      onClick={() => setShowPreview(true)}
-                      className={`flex-1 px-4 py-2 text-sm font-medium ${
-                        showPreview
-                          ? 'bg-white border-b-2 border-blue-500 text-blue-600'
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Preview
-                    </button>
-                  </div>
-
-                  {/* Content Area */}
-                  <div className="flex-1 overflow-hidden flex">
-                    {/* Editor */}
-                    <div className={`${showPreview ? 'w-1/2' : 'w-full'} border-r overflow-auto`}>
-                      <textarea
-                        value={editableContent}
-                        onChange={(e) => setEditableContent(e.target.value)}
-                        className="w-full h-full p-4 resize-none focus:outline-none font-mono text-sm"
-                        placeholder="Generated content will appear here..."
-                      />
-                    </div>
-
-                    {/* Preview */}
-                    {showPreview && (
-                      <div className="w-1/2 overflow-auto p-6 bg-white">
-                        <div 
-                          className="prose prose-lg max-w-none"
-                          dangerouslySetInnerHTML={{ __html: renderMarkdown(editableContent) }}
-                        />
-                      </div>
-                    )}
-                  </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Subject</Label>
+                  <Input
+                    value={generateForm.subject}
+                    onChange={(e) => setGenerateForm({ ...generateForm, subject: e.target.value })}
+                  />
                 </div>
-              )}
+                <div>
+                  <Label>Topic</Label>
+                  <Input
+                    value={generateForm.topic}
+                    onChange={(e) => setGenerateForm({ ...generateForm, topic: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Difficulty</Label>
+                  <Select
+                    value={generateForm.difficulty}
+                    onValueChange={(value) => setGenerateForm({ ...generateForm, difficulty: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="beginner">Beginner</SelectItem>
+                      <SelectItem value="intermediate">Intermediate</SelectItem>
+                      <SelectItem value="advanced">Advanced</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Content Type</Label>
+                  <Select
+                    value={generateForm.type}
+                    onValueChange={(value) => setGenerateForm({ ...generateForm, type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="learning-page">Learning Page</SelectItem>
+                      <SelectItem value="exercise">Exercise</SelectItem>
+                      <SelectItem value="exercise-with-solution">Exercise with Solution</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label>AI Provider</Label>
+                <Select
+                  value={generateForm.provider}
+                  onValueChange={(value) => setGenerateForm({ ...generateForm, provider: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="openai">OpenAI (GPT-4)</SelectItem>
+                    <SelectItem value="mistral">Mistral AI</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Additional Instructions</Label>
+                <textarea
+                  className="w-full min-h-[150px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={generateForm.customPrompt}
+                  onChange={(e) => setGenerateForm({ ...generateForm, customPrompt: e.target.value })}
+                  placeholder="Generate more like this"
+                />
+              </div>
             </div>
 
             <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
-              {!generatedNewContent ? (
-                <>
-                  <Button
-                    onClick={() => {
-                      setShowGenerateModal(false)
-                      setGeneratedNewContent('')
-                      setEditableContent('')
-                      setShowPreview(false)
-                      setBaseContent(null)
-                    }}
-                    variant="outline"
-                  >
-                    Cancel
-                  </Button>
-                  <Button onClick={handleGenerateNew} disabled={generating}>
-                    {generating ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Generate
-                      </>
-                    )}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    onClick={() => {
-                      setGeneratedNewContent('')
-                      setEditableContent('')
-                      setShowPreview(false)
-                    }}
-                    variant="outline"
-                  >
-                    Back to Form
-                  </Button>
-                  <Button onClick={handleSaveGeneratedContent}>
-                    Save Content
-                  </Button>
-                </>
-              )}
+              <Button
+                onClick={() => {
+                  setShowGenerateModal(false)
+                  setGeneratedNewContent('')
+                  setEditableContent('')
+                  setShowPreview(false)
+                  setRefinementPrompt('')
+                  setBaseContent(null)
+                }}
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleGenerateNew} disabled={generating}>
+                {generating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Generate
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full-Screen Preview Modal (matches main generator) */}
+      {showGenerateModal && generatedNewContent && (
+        <div className="fixed inset-0 bg-white z-50 flex flex-col">
+          {/* Header */}
+          <div className="p-4 border-b bg-white flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-semibold">Content Preview</h2>
+              <span className="text-sm text-gray-600">Powered by {generateForm.provider === 'openai' ? 'OpenAI' : 'Mistral AI'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => {
+                  setGeneratedNewContent('')
+                  setEditableContent('')
+                  setShowPreview(false)
+                  setRefinementPrompt('')
+                }}
+                variant="outline"
+                size="sm"
+              >
+                New Generation
+              </Button>
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
+            {/* Editor Side */}
+            <div className="w-full md:w-1/2 flex flex-col border-r">
+              <div className="p-3 bg-gray-50 border-b">
+                <Label htmlFor="editableContentLibrary" className="text-sm font-semibold">Edit Content (Source)</Label>
+              </div>
+              <textarea
+                id="editableContentLibrary"
+                className="flex-1 px-4 py-3 text-sm focus:outline-none font-mono resize-none"
+                value={editableContent}
+                onChange={(e) => setEditableContent(e.target.value)}
+              />
+            </div>
+
+            {/* Preview Side */}
+            <div className="w-full md:w-1/2 flex flex-col bg-white">
+              <div className="p-3 bg-gray-50 border-b">
+                <Label className="text-sm font-semibold">Preview (Formatted)</Label>
+              </div>
+              <div className="flex-1 overflow-auto px-8 py-6 bg-white">
+                <div 
+                  className="prose prose-lg max-w-none"
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(editableContent) }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 border-t bg-gray-50 space-y-3">
+            <div>
+              <Label htmlFor="refinementPromptLibrary" className="text-sm font-semibold">Refine Content (Optional)</Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  id="refinementPromptLibrary"
+                  placeholder="e.g., Make it shorter, add more examples, simplify language..."
+                  value={refinementPrompt}
+                  onChange={(e) => setRefinementPrompt(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && !isRefining && handleRefine()}
+                />
+                <Button 
+                  onClick={handleRefine} 
+                  disabled={isRefining || !refinementPrompt.trim()}
+                  variant="outline"
+                >
+                  {isRefining ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Refining...
+                    </>
+                  ) : (
+                    'Refine'
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleSaveGeneratedContent} 
+                className="flex-1"
+              >
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Save Content
+              </Button>
+              <Button 
+                onClick={() => {
+                  setShowGenerateModal(false)
+                  setGeneratedNewContent('')
+                  setEditableContent('')
+                  setShowPreview(false)
+                  setRefinementPrompt('')
+                  setBaseContent(null)
+                }} 
+                variant="outline"
+                className="flex-1"
+              >
+                Cancel
+              </Button>
             </div>
           </div>
         </div>
