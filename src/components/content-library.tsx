@@ -10,6 +10,10 @@ import { Loader2, Search, FileText, BookOpen, ClipboardList, Eye, X, Sparkles, C
 import { apiClient } from '@/lib/api'
 import { marked } from 'marked'
 import { useToast } from '@/hooks/use-toast'
+import countries from 'i18n-iso-countries'
+import enLocale from 'i18n-iso-countries/langs/en.json'
+
+countries.registerLocale(enLocale)
 
 interface Content {
   _id: string
@@ -22,6 +26,8 @@ interface Content {
   state?: string
   schoolType?: string
   grade?: string
+  language?: string
+  country?: string
   creatorName?: string
   creatorEmail?: string
   createdAt: string
@@ -76,6 +82,8 @@ export function ContentLibrary() {
     state: '',
     schoolType: '',
     grade: '',
+    language: 'English',
+    country: '',
     customPrompt: '',
     provider: 'openai'
   })
@@ -302,6 +310,8 @@ export function ContentLibrary() {
       state: content.state || '',
       schoolType: content.schoolType || '',
       grade: content.grade || '',
+      language: content.language || 'English',
+      country: content.country || '',
       customPrompt: '',
       provider: 'openai'
     })
@@ -416,6 +426,8 @@ export function ContentLibrary() {
         state: '',
         schoolType: '',
         grade: '',
+        language: 'English',
+        country: '',
         customPrompt: '',
         provider: 'openai'
       })
@@ -778,18 +790,65 @@ export function ContentLibrary() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>AI Provider</Label>
+                  <Select
+                    value={generateForm.provider}
+                    onValueChange={(value) => setGenerateForm({ ...generateForm, provider: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="openai">OpenAI (GPT-4)</SelectItem>
+                      <SelectItem value="mistral">Mistral AI</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Output Language</Label>
+                  <Select
+                    value={generateForm.language}
+                    onValueChange={(value) => setGenerateForm({ ...generateForm, language: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="English">English</SelectItem>
+                      <SelectItem value="German">German</SelectItem>
+                      <SelectItem value="Spanish">Spanish</SelectItem>
+                      <SelectItem value="French">French</SelectItem>
+                      <SelectItem value="Italian">Italian</SelectItem>
+                      <SelectItem value="Portuguese">Portuguese</SelectItem>
+                      <SelectItem value="Dutch">Dutch</SelectItem>
+                      <SelectItem value="Polish">Polish</SelectItem>
+                      <SelectItem value="Russian">Russian</SelectItem>
+                      <SelectItem value="Chinese">Chinese</SelectItem>
+                      <SelectItem value="Japanese">Japanese</SelectItem>
+                      <SelectItem value="Korean">Korean</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div>
-                <Label>AI Provider</Label>
+                <Label>Country (Optional)</Label>
                 <Select
-                  value={generateForm.provider}
-                  onValueChange={(value) => setGenerateForm({ ...generateForm, provider: value })}
+                  value={generateForm.country || 'none'}
+                  onValueChange={(value) => setGenerateForm({ ...generateForm, country: value === 'none' ? '' : value })}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="No country preference" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="openai">OpenAI (GPT-4)</SelectItem>
-                    <SelectItem value="mistral">Mistral AI</SelectItem>
+                    <SelectItem value="none">No country preference</SelectItem>
+                    {Object.entries(countries.getNames('en')).map(([code, name]) => (
+                      <SelectItem key={code} value={name}>
+                        {name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
