@@ -152,13 +152,20 @@ export function ContentLibrary() {
       // Step 2: Parse markdown
       let html = marked.parse(protectedContent) as string
       
-      // Step 3: Restore LaTeX placeholders
+      console.log('Protected content sample:', protectedContent.substring(0, 300))
+      console.log('HTML before restoration:', html.substring(0, 300))
+      console.log('Number of placeholders:', Object.keys(latexPlaceholders).length)
+      
+      // Step 3: Restore LaTeX placeholders - use split/join instead of regex
       Object.keys(latexPlaceholders).forEach(placeholder => {
-        // Escape special regex characters in placeholder
-        const escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        const regex = new RegExp(escapedPlaceholder, 'g')
-        html = html.replace(regex, latexPlaceholders[placeholder])
+        console.log(`Looking for placeholder: ${placeholder}`)
+        console.log(`Will replace with: ${latexPlaceholders[placeholder].substring(0, 50)}`)
+        
+        // Simple split/join replacement (more reliable than regex)
+        html = html.split(placeholder).join(latexPlaceholders[placeholder])
       })
+      
+      console.log('HTML after restoration:', html.substring(0, 500))
       
       return html
     } catch (error) {
