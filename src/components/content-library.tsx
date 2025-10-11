@@ -757,7 +757,34 @@ export function ContentLibrary() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Difficulty</Label>
+                  <Label>State (Optional)</Label>
+                  <Input
+                    value={generateForm.state}
+                    onChange={(e) => setGenerateForm({ ...generateForm, state: e.target.value })}
+                    placeholder="e.g., Bavaria, California"
+                  />
+                </div>
+                <div>
+                  <Label>School Type (Optional)</Label>
+                  <Input
+                    value={generateForm.schoolType}
+                    onChange={(e) => setGenerateForm({ ...generateForm, schoolType: e.target.value })}
+                    placeholder="e.g., Gymnasium, High School"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Grade (Optional)</Label>
+                  <Input
+                    value={generateForm.grade}
+                    onChange={(e) => setGenerateForm({ ...generateForm, grade: e.target.value })}
+                    placeholder="e.g., 9, 10, 11"
+                  />
+                </div>
+                <div>
+                  <Label>Difficulty Level</Label>
                   <Select
                     value={generateForm.difficulty}
                     onValueChange={(value) => setGenerateForm({ ...generateForm, difficulty: value })}
@@ -772,6 +799,9 @@ export function ContentLibrary() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Content Type</Label>
                   <Select
@@ -788,9 +818,6 @@ export function ContentLibrary() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>AI Provider</Label>
                   <Select
@@ -806,6 +833,9 @@ export function ContentLibrary() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Output Language</Label>
                   <Select
@@ -831,26 +861,25 @@ export function ContentLibrary() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              <div>
-                <Label>Country (Optional)</Label>
-                <Select
-                  value={generateForm.country || 'none'}
-                  onValueChange={(value) => setGenerateForm({ ...generateForm, country: value === 'none' ? '' : value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="No country preference" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No country preference</SelectItem>
-                    {Object.entries(countries.getNames('en')).map(([code, name]) => (
-                      <SelectItem key={code} value={name}>
-                        {name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div>
+                  <Label>Country (Optional)</Label>
+                  <Select
+                    value={generateForm.country || 'none'}
+                    onValueChange={(value) => setGenerateForm({ ...generateForm, country: value === 'none' ? '' : value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="No country preference" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No country preference</SelectItem>
+                      {Object.entries(countries.getNames('en')).map(([code, name]) => (
+                        <SelectItem key={code} value={name}>
+                          {name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div>
