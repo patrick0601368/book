@@ -63,7 +63,6 @@ export function ContentLibrary() {
   const [generating, setGenerating] = useState(false)
   const [generatedNewContent, setGeneratedNewContent] = useState('')
   const [editableContent, setEditableContent] = useState('')
-  const [showPreview, setShowPreview] = useState(false)
   const [refinementPrompt, setRefinementPrompt] = useState('')
   const [isRefining, setIsRefining] = useState(false)
   const [baseContent, setBaseContent] = useState<Content | null>(null) // Store the original content
@@ -175,7 +174,7 @@ export function ContentLibrary() {
 
   // Trigger MathJax for generated content preview
   useEffect(() => {
-    if (showPreview && showGenerateModal) {
+    if (generatedNewContent && showGenerateModal) {
       const renderMath = () => {
         if (typeof window !== 'undefined' && (window as any).MathJax) {
           console.log('Triggering MathJax typeset for generated content preview...')
@@ -189,7 +188,7 @@ export function ContentLibrary() {
       setTimeout(renderMath, 100)
       setTimeout(renderMath, 500)
     }
-  }, [showPreview, showGenerateModal, editableContent])
+  }, [generatedNewContent, showGenerateModal, editableContent])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -336,7 +335,6 @@ export function ContentLibrary() {
       const data = await apiClient.generateContent(requestData)
       setGeneratedNewContent(data.content)
       setEditableContent(data.content)
-      setShowPreview(true)
       
       toast({
         title: "Success!",
@@ -408,7 +406,6 @@ export function ContentLibrary() {
       setShowGenerateModal(false)
       setGeneratedNewContent('')
       setEditableContent('')
-      setShowPreview(false)
       setRefinementPrompt('')
       setBaseContent(null)
       setGenerateForm({
@@ -718,7 +715,6 @@ export function ContentLibrary() {
                   setShowGenerateModal(false)
                   setGeneratedNewContent('')
                   setEditableContent('')
-                  setShowPreview(false)
                   setRefinementPrompt('')
                   setBaseContent(null)
                 }}
@@ -815,7 +811,6 @@ export function ContentLibrary() {
                   setShowGenerateModal(false)
                   setGeneratedNewContent('')
                   setEditableContent('')
-                  setShowPreview(false)
                   setRefinementPrompt('')
                   setBaseContent(null)
                 }}
@@ -855,7 +850,6 @@ export function ContentLibrary() {
                 onClick={() => {
                   setGeneratedNewContent('')
                   setEditableContent('')
-                  setShowPreview(false)
                   setRefinementPrompt('')
                 }}
                 variant="outline"
@@ -937,7 +931,6 @@ export function ContentLibrary() {
                   setShowGenerateModal(false)
                   setGeneratedNewContent('')
                   setEditableContent('')
-                  setShowPreview(false)
                   setRefinementPrompt('')
                   setBaseContent(null)
                 }} 
