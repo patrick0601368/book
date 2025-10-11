@@ -62,6 +62,8 @@ export function ContentLibrary() {
   const [showGenerateModal, setShowGenerateModal] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [generatedNewContent, setGeneratedNewContent] = useState('')
+  const [editableContent, setEditableContent] = useState('')
+  const [showPreview, setShowPreview] = useState(false)
   const [baseContent, setBaseContent] = useState<Content | null>(null) // Store the original content
   
   // Form data for generation based on existing content
@@ -171,7 +173,7 @@ export function ContentLibrary() {
 
   // Trigger MathJax for generated content preview
   useEffect(() => {
-    if (generatedNewContent && showGenerateModal) {
+    if (showPreview && showGenerateModal) {
       const renderMath = () => {
         if (typeof window !== 'undefined' && (window as any).MathJax) {
           console.log('Triggering MathJax typeset for generated content preview...')
@@ -185,7 +187,7 @@ export function ContentLibrary() {
       setTimeout(renderMath, 100)
       setTimeout(renderMath, 500)
     }
-  }, [generatedNewContent, showGenerateModal])
+  }, [showPreview, showGenerateModal, editableContent])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -331,10 +333,12 @@ export function ContentLibrary() {
       
       const data = await apiClient.generateContent(requestData)
       setGeneratedNewContent(data.content)
+      setEditableContent(data.content)
+      setShowPreview(true)
       
       toast({
         title: "Success!",
-        description: "New content generated. You can now save it if you'd like."
+        description: "Content generated. Edit and preview before saving."
       })
     } catch (error) {
       console.error('Error generating content:', error)
@@ -352,7 +356,7 @@ export function ContentLibrary() {
     try {
       await apiClient.saveContent({
         title: `${generateForm.subject} - ${generateForm.topic}`,
-        content: generatedNewContent,
+        content: editableContent,
         subject: generateForm.subject,
         topic: generateForm.topic,
         difficulty: generateForm.difficulty,
@@ -370,6 +374,8 @@ export function ContentLibrary() {
       // Reset and close
       setShowGenerateModal(false)
       setGeneratedNewContent('')
+      setEditableContent('')
+      setShowPreview(false)
       setBaseContent(null)
       setGenerateForm({
         subject: '',
@@ -677,6 +683,8 @@ export function ContentLibrary() {
                 onClick={() => {
                   setShowGenerateModal(false)
                   setGeneratedNewContent('')
+                  setEditableContent('')
+                  setShowPreview(false)
                   setBaseContent(null)
                 }}
                 variant="ghost"
@@ -768,13 +776,52 @@ export function ContentLibrary() {
                   </div>
                 </>
               ) : (
-                <div>
-                  <Label>Generated Content Preview</Label>
-                  <div className="mt-2 p-4 border rounded-lg bg-gray-50 max-h-[400px] overflow-auto">
-                    <div 
-                      className="prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: renderMarkdown(generatedNewContent) }}
-                    />
+                <div className="h-[600px] border rounded-lg overflow-hidden bg-white flex flex-col">
+                  {/* Tabs */}
+                  <div className="flex border-b bg-gray-50">
+                    <button
+                      onClick={() => setShowPreview(false)}
+                      className={`flex-1 px-4 py-2 text-sm font-medium ${
+                        !showPreview
+                          ? 'bg-white border-b-2 border-blue-500 text-blue-600'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      Editor
+                    </button>
+                    <button
+                      onClick={() => setShowPreview(true)}
+                      className={`flex-1 px-4 py-2 text-sm font-medium ${
+                        showPreview
+                          ? 'bg-white border-b-2 border-blue-500 text-blue-600'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      Preview
+                    </button>
+                  </div>
+
+                  {/* Content Area */}
+                  <div className="flex-1 overflow-hidden flex">
+                    {/* Editor */}
+                    <div className={`${showPreview ? 'w-1/2' : 'w-full'} border-r overflow-auto`}>
+                      <textarea
+                        value={editableContent}
+                        onChange={(e) => setEditableContent(e.target.value)}
+                        className="w-full h-full p-4 resize-none focus:outline-none font-mono text-sm"
+                        placeholder="Generated content will appear here..."
+                      />
+                    </div>
+
+                    {/* Preview */}
+                    {showPreview && (
+                      <div className="w-1/2 overflow-auto p-6 bg-white">
+                        <div 
+                          className="prose prose-lg max-w-none"
+                          dangerouslySetInnerHTML={{ __html: renderMarkdown(editableContent) }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -787,6 +834,8 @@ export function ContentLibrary() {
                     onClick={() => {
                       setShowGenerateModal(false)
                       setGeneratedNewContent('')
+                      setEditableContent('')
+                      setShowPreview(false)
                       setBaseContent(null)
                     }}
                     variant="outline"
@@ -810,10 +859,14 @@ export function ContentLibrary() {
               ) : (
                 <>
                   <Button
-                    onClick={() => setGeneratedNewContent('')}
+                    onClick={() => {
+                      setGeneratedNewContent('')
+                      setEditableContent('')
+                      setShowPreview(false)
+                    }}
                     variant="outline"
                   >
-                    Regenerate
+                    Back to Form
                   </Button>
                   <Button onClick={handleSaveGeneratedContent}>
                     Save Content
