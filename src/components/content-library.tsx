@@ -62,6 +62,7 @@ export function ContentLibrary() {
   const [showGenerateModal, setShowGenerateModal] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [generatedNewContent, setGeneratedNewContent] = useState('')
+  const [baseContent, setBaseContent] = useState<Content | null>(null) // Store the original content
   
   // Form data for generation based on existing content
   const [generateForm, setGenerateForm] = useState({
@@ -286,6 +287,9 @@ export function ContentLibrary() {
   }
 
   const handleGenerateBasedOn = (content: Content) => {
+    // Store the base content for context
+    setBaseContent(content)
+    
     // Pre-fill form with existing content data
     setGenerateForm({
       subject: content.subject,
@@ -295,7 +299,7 @@ export function ContentLibrary() {
       state: content.state || '',
       schoolType: content.schoolType || '',
       grade: content.grade || '',
-      customPrompt: `Create new content based on this existing content:\n\n${content.content.substring(0, 500)}...`,
+      customPrompt: 'Create a variation of this content with improvements or a different approach.',
       provider: 'openai'
     })
     setShowGenerateModal(true)
@@ -314,7 +318,18 @@ export function ContentLibrary() {
 
     try {
       setGenerating(true)
-      const data = await apiClient.generateContent(generateForm)
+      
+      // If we have base content, include it in the request
+      const requestData = {
+        ...generateForm,
+        // Add the existing content as context
+        existingContent: baseContent ? baseContent.content : undefined,
+        customPrompt: baseContent 
+          ? `${generateForm.customPrompt}\n\n---\n\nExisting content for reference:\n\n${baseContent.content}`
+          : generateForm.customPrompt
+      }
+      
+      const data = await apiClient.generateContent(requestData)
       setGeneratedNewContent(data.content)
       
       toast({
@@ -355,6 +370,7 @@ export function ContentLibrary() {
       // Reset and close
       setShowGenerateModal(false)
       setGeneratedNewContent('')
+      setBaseContent(null)
       setGenerateForm({
         subject: '',
         topic: '',
@@ -661,6 +677,7 @@ export function ContentLibrary() {
                 onClick={() => {
                   setShowGenerateModal(false)
                   setGeneratedNewContent('')
+                  setBaseContent(null)
                 }}
                 variant="ghost"
                 size="sm"
@@ -754,6 +771,7 @@ export function ContentLibrary() {
                     onClick={() => {
                       setShowGenerateModal(false)
                       setGeneratedNewContent('')
+                      setBaseContent(null)
                     }}
                     variant="outline"
                   >
