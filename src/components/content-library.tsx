@@ -742,6 +742,22 @@ export function ContentLibrary() {
                   </div>
 
                   <div>
+                    <Label>AI Provider</Label>
+                    <Select
+                      value={generateForm.provider}
+                      onValueChange={(value) => setGenerateForm({ ...generateForm, provider: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="openai">OpenAI (GPT-4)</SelectItem>
+                        <SelectItem value="mistral">Mistral AI</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
                     <Label>Additional Instructions</Label>
                     <textarea
                       className="w-full min-h-[150px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
