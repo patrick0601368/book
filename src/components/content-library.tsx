@@ -176,23 +176,35 @@ export function ContentLibrary() {
 
   // Trigger MathJax rendering after content changes
   useEffect(() => {
-    if (selectedContent) {
-      const renderMath = () => {
-        if (typeof window !== 'undefined' && (window as any).MathJax) {
-          console.log('Triggering MathJax typeset for library...')
-          ;(window as any).MathJax.typesetPromise?.()
+    if (!selectedContent) return
+
+    let timeoutId1: NodeJS.Timeout
+    let timeoutId2: NodeJS.Timeout
+    let cancelled = false
+
+    const renderMath = () => {
+      if (cancelled) return
+      
+      if (typeof window !== 'undefined' && (window as any).MathJax) {
+        console.log('Triggering MathJax typeset for library...')
+        const element = document.getElementById('content-library-preview')
+        if (element) {
+          ;(window as any).MathJax.typesetClear?.([element])
+          ;(window as any).MathJax.typesetPromise?.([element])
             .then(() => console.log('MathJax rendering complete'))
             .catch((err: any) => console.error('MathJax error:', err))
-        } else {
-          // MathJax not loaded yet, try again
-          setTimeout(renderMath, 500)
         }
       }
-      
-      // Initial render
-      setTimeout(renderMath, 100)
-      // Backup render
-      setTimeout(renderMath, 500)
+    }
+    
+    // Wait for content to be in DOM
+    timeoutId1 = setTimeout(renderMath, 100)
+    timeoutId2 = setTimeout(renderMath, 500)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timeoutId1)
+      clearTimeout(timeoutId2)
     }
   }, [selectedContent])
 
@@ -737,6 +749,7 @@ export function ContentLibrary() {
 
             <div className="flex-1 overflow-auto p-8 bg-white">
               <div 
+                id="content-library-preview"
                 className="prose prose-lg max-w-none"
                 dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedContent.content) }}
               />
