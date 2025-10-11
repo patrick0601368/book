@@ -188,7 +188,7 @@ export function ContentLibrary() {
 
   // Trigger MathJax for generated content preview
   useEffect(() => {
-    if (showGenerateModal && generatedNewContent) {
+    if (showGenerateModal) {
       const renderMath = () => {
         if (typeof window !== 'undefined' && (window as any).MathJax) {
           console.log('Triggering MathJax typeset for generated content preview...')
