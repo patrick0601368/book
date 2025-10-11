@@ -105,6 +105,9 @@ export class ApiClient {
     state?: string;
     schoolType?: string;
     grade?: string;
+    language?: string;
+    country?: string;
+    basedOnId?: string;
   }) {
     return this.request('/api/content', {
       method: 'POST',
