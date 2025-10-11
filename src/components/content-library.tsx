@@ -299,7 +299,7 @@ export function ContentLibrary() {
       state: content.state || '',
       schoolType: content.schoolType || '',
       grade: content.grade || '',
-      customPrompt: 'Create a variation of this content with improvements or a different approach.',
+      customPrompt: '',
       provider: 'openai'
     })
     setShowGenerateModal(true)
@@ -325,7 +325,7 @@ export function ContentLibrary() {
         // Add the existing content as context
         existingContent: baseContent ? baseContent.content : undefined,
         customPrompt: baseContent 
-          ? `${generateForm.customPrompt}\n\n---\n\nExisting content for reference:\n\n${baseContent.content}`
+          ? `${generateForm.customPrompt || 'Generate similar content with improvements or a different approach.'}\n\n---\n\nExisting content for reference:\n\n${baseContent.content}`
           : generateForm.customPrompt
       }
       
@@ -747,7 +747,7 @@ export function ContentLibrary() {
                       className="w-full min-h-[150px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={generateForm.customPrompt}
                       onChange={(e) => setGenerateForm({ ...generateForm, customPrompt: e.target.value })}
-                      placeholder="Add any additional instructions for generating the new content..."
+                      placeholder="Generate more like this"
                     />
                   </div>
                 </>
