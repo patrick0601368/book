@@ -25,7 +25,7 @@ export class ApiClient {
 
     // Add timeout to prevent infinite loading
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for Render free tier
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout (2 minutes) for AI generation
 
     try {
       const response = await fetch(url, {

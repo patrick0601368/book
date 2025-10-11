@@ -389,6 +389,7 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${mistralApiKey}`,
         },
+        timeout: 120000, // 120 seconds (2 minutes)
       });
 
       content = mistralResponse.data.choices[0]?.message?.content || '';
@@ -401,6 +402,7 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
 
       const openai = new OpenAI({
         apiKey: openaiApiKey,
+        timeout: 120000, // 120 seconds (2 minutes)
       });
 
       const completion = await openai.chat.completions.create({
