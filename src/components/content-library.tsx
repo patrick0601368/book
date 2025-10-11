@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Search, FileText, BookOpen, ClipboardList, Eye, X } from 'lucide-react'
+import { Loader2, Search, FileText, BookOpen, ClipboardList, Eye, X, Sparkles } from 'lucide-react'
 import { apiClient } from '@/lib/api'
 import { marked } from 'marked'
+import { useToast } from '@/hooks/use-toast'
 
 interface Content {
   _id: string
@@ -48,6 +49,7 @@ interface Grade {
 }
 
 export function ContentLibrary() {
+  const { toast } = useToast()
   const [contents, setContents] = useState<Content[]>([])
   const [filteredContents, setFilteredContents] = useState<Content[]>([])
   const [subjects, setSubjects] = useState<Subject[]>([])
@@ -57,6 +59,22 @@ export function ContentLibrary() {
   
   const [loading, setLoading] = useState(true)
   const [selectedContent, setSelectedContent] = useState<Content | null>(null)
+  const [showGenerateModal, setShowGenerateModal] = useState(false)
+  const [generating, setGenerating] = useState(false)
+  const [generatedNewContent, setGeneratedNewContent] = useState('')
+  
+  // Form data for generation based on existing content
+  const [generateForm, setGenerateForm] = useState({
+    subject: '',
+    topic: '',
+    difficulty: 'beginner',
+    type: 'learning-page',
+    state: '',
+    schoolType: '',
+    grade: '',
+    customPrompt: '',
+    provider: 'openai'
+  })
   
   const [searchQuery, setSearchQuery] = useState('')
   const [filterSubject, setFilterSubject] = useState('all')
@@ -149,6 +167,24 @@ export function ContentLibrary() {
       setTimeout(renderMath, 500)
     }
   }, [selectedContent])
+
+  // Trigger MathJax for generated content preview
+  useEffect(() => {
+    if (generatedNewContent && showGenerateModal) {
+      const renderMath = () => {
+        if (typeof window !== 'undefined' && (window as any).MathJax) {
+          console.log('Triggering MathJax typeset for generated content preview...')
+          ;(window as any).MathJax.typesetPromise?.()
+            .then(() => console.log('MathJax rendering complete'))
+            .catch((err: any) => console.error('MathJax error:', err))
+        } else {
+          setTimeout(renderMath, 500)
+        }
+      }
+      setTimeout(renderMath, 100)
+      setTimeout(renderMath, 500)
+    }
+  }, [generatedNewContent, showGenerateModal])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -247,6 +283,102 @@ export function ContentLibrary() {
     setFilterState('all')
     setFilterSchoolType('all')
     setFilterGrade('all')
+  }
+
+  const handleGenerateBasedOn = (content: Content) => {
+    // Pre-fill form with existing content data
+    setGenerateForm({
+      subject: content.subject,
+      topic: content.topic,
+      difficulty: content.difficulty,
+      type: content.type,
+      state: content.state || '',
+      schoolType: content.schoolType || '',
+      grade: content.grade || '',
+      customPrompt: `Create new content based on this existing content:\n\n${content.content.substring(0, 500)}...`,
+      provider: 'openai'
+    })
+    setShowGenerateModal(true)
+    setSelectedContent(null) // Close the view modal
+  }
+
+  const handleGenerateNew = async () => {
+    if (!generateForm.subject || !generateForm.topic) {
+      toast({
+        title: "Error",
+        description: "Subject and topic are required",
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      setGenerating(true)
+      const data = await apiClient.generateContent(generateForm)
+      setGeneratedNewContent(data.content)
+      
+      toast({
+        title: "Success!",
+        description: "New content generated. You can now save it if you'd like."
+      })
+    } catch (error) {
+      console.error('Error generating content:', error)
+      toast({
+        title: "Error",
+        description: "Failed to generate content",
+        variant: "destructive"
+      })
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const handleSaveGeneratedContent = async () => {
+    try {
+      await apiClient.saveContent({
+        title: `${generateForm.subject} - ${generateForm.topic}`,
+        content: generatedNewContent,
+        subject: generateForm.subject,
+        topic: generateForm.topic,
+        difficulty: generateForm.difficulty,
+        type: generateForm.type,
+        state: generateForm.state,
+        schoolType: generateForm.schoolType,
+        grade: generateForm.grade,
+      })
+      
+      toast({
+        title: "Saved!",
+        description: "New content saved successfully"
+      })
+      
+      // Reset and close
+      setShowGenerateModal(false)
+      setGeneratedNewContent('')
+      setGenerateForm({
+        subject: '',
+        topic: '',
+        difficulty: 'beginner',
+        type: 'learning-page',
+        state: '',
+        schoolType: '',
+        grade: '',
+        customPrompt: '',
+        provider: 'openai'
+      })
+      
+      // Refresh content list
+      const contentsResponse = await apiClient.getContent()
+      setContents(contentsResponse)
+      setFilteredContents(contentsResponse)
+    } catch (error) {
+      console.error('Error saving content:', error)
+      toast({
+        title: "Error",
+        description: "Failed to save content",
+        variant: "destructive"
+      })
+    }
   }
 
   if (loading) {
@@ -504,10 +636,156 @@ export function ContentLibrary() {
                     )}
                   </div>
                 </div>
-                <Button onClick={() => setSelectedContent(null)} variant="outline">
-                  Close
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={() => handleGenerateBasedOn(selectedContent)}>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Generate Based on This
+                  </Button>
+                  <Button onClick={() => setSelectedContent(null)} variant="outline">
+                    Close
+                  </Button>
+                </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Generate Based On Modal */}
+      {showGenerateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-xl font-bold">Generate New Content Based on Existing</h2>
+              <Button
+                onClick={() => {
+                  setShowGenerateModal(false)
+                  setGeneratedNewContent('')
+                }}
+                variant="ghost"
+                size="sm"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            <div className="flex-1 overflow-auto p-6 space-y-4">
+              {!generatedNewContent ? (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Subject</Label>
+                      <Input
+                        value={generateForm.subject}
+                        onChange={(e) => setGenerateForm({ ...generateForm, subject: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Topic</Label>
+                      <Input
+                        value={generateForm.topic}
+                        onChange={(e) => setGenerateForm({ ...generateForm, topic: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Difficulty</Label>
+                      <Select
+                        value={generateForm.difficulty}
+                        onValueChange={(value) => setGenerateForm({ ...generateForm, difficulty: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="beginner">Beginner</SelectItem>
+                          <SelectItem value="intermediate">Intermediate</SelectItem>
+                          <SelectItem value="advanced">Advanced</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Content Type</Label>
+                      <Select
+                        value={generateForm.type}
+                        onValueChange={(value) => setGenerateForm({ ...generateForm, type: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="learning-page">Learning Page</SelectItem>
+                          <SelectItem value="exercise">Exercise</SelectItem>
+                          <SelectItem value="exercise-with-solution">Exercise with Solution</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Additional Instructions</Label>
+                    <textarea
+                      className="w-full min-h-[150px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={generateForm.customPrompt}
+                      onChange={(e) => setGenerateForm({ ...generateForm, customPrompt: e.target.value })}
+                      placeholder="Add any additional instructions for generating the new content..."
+                    />
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <Label>Generated Content Preview</Label>
+                  <div className="mt-2 p-4 border rounded-lg bg-gray-50 max-h-[400px] overflow-auto">
+                    <div 
+                      className="prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: renderMarkdown(generatedNewContent) }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
+              {!generatedNewContent ? (
+                <>
+                  <Button
+                    onClick={() => {
+                      setShowGenerateModal(false)
+                      setGeneratedNewContent('')
+                    }}
+                    variant="outline"
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleGenerateNew} disabled={generating}>
+                    {generating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Generate
+                      </>
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    onClick={() => setGeneratedNewContent('')}
+                    variant="outline"
+                  >
+                    Regenerate
+                  </Button>
+                  <Button onClick={handleSaveGeneratedContent}>
+                    Save Content
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
