@@ -111,6 +111,8 @@ const contentSchema = new mongoose.Schema({
   state: { type: String },
   schoolType: { type: String },
   grade: { type: String },
+  language: { type: String, default: 'English' },
+  country: { type: String },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   creatorName: { type: String }, // User's name who created the content
   creatorEmail: { type: String }, // User's email who created the content
@@ -452,7 +454,7 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
 // Save generated content
 app.post('/api/content', authenticateToken, async (req, res) => {
   try {
-    const { title, content, subject, topic, difficulty, type, state, schoolType, grade } = req.body;
+    const { title, content, subject, topic, difficulty, type, state, schoolType, grade, language, country } = req.body;
 
     if (!title || !content || !subject || !topic || !difficulty || !type) {
       return res.status(400).json({ message: 'Missing required fields' });
@@ -474,6 +476,8 @@ app.post('/api/content', authenticateToken, async (req, res) => {
       state: state || '',
       schoolType: schoolType || '',
       grade: grade || '',
+      language: language || 'English',
+      country: country || '',
       userId: req.user.userId,
       creatorName: user.name,
       creatorEmail: user.email,
