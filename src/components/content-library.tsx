@@ -73,6 +73,14 @@ export function ContentLibrary() {
   const [isRefining, setIsRefining] = useState(false)
   const [baseContent, setBaseContent] = useState<Content | null>(null) // Store the original content
   
+  // Add new state/schoolType/grade UI states
+  const [isAddingNewState, setIsAddingNewState] = useState(false)
+  const [isAddingNewSchoolType, setIsAddingNewSchoolType] = useState(false)
+  const [isAddingNewGrade, setIsAddingNewGrade] = useState(false)
+  const [newState, setNewState] = useState('')
+  const [newSchoolType, setNewSchoolType] = useState('')
+  const [newGrade, setNewGrade] = useState('')
+  
   // Form data for generation based on existing content
   const [generateForm, setGenerateForm] = useState({
     subject: '',
@@ -295,6 +303,51 @@ export function ContentLibrary() {
     setFilterState('all')
     setFilterSchoolType('all')
     setFilterGrade('all')
+  }
+
+  const handleAddState = async () => {
+    if (!newState.trim()) return
+    try {
+      await apiClient.createState(newState)
+      const statesData = await apiClient.getStates()
+      setStates(statesData)
+      setGenerateForm({ ...generateForm, state: newState })
+      setNewState('')
+      setIsAddingNewState(false)
+      toast({ title: "Success", description: "State added successfully" })
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to add state", variant: "destructive" })
+    }
+  }
+
+  const handleAddSchoolType = async () => {
+    if (!newSchoolType.trim()) return
+    try {
+      await apiClient.createSchoolType(newSchoolType)
+      const schoolTypesData = await apiClient.getSchoolTypes()
+      setSchoolTypes(schoolTypesData)
+      setGenerateForm({ ...generateForm, schoolType: newSchoolType })
+      setNewSchoolType('')
+      setIsAddingNewSchoolType(false)
+      toast({ title: "Success", description: "School type added successfully" })
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to add school type", variant: "destructive" })
+    }
+  }
+
+  const handleAddGrade = async () => {
+    if (!newGrade.trim()) return
+    try {
+      await apiClient.createGrade(newGrade)
+      const gradesData = await apiClient.getGrades()
+      setGrades(gradesData)
+      setGenerateForm({ ...generateForm, grade: newGrade })
+      setNewGrade('')
+      setIsAddingNewGrade(false)
+      toast({ title: "Success", description: "Grade added successfully" })
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to add grade", variant: "destructive" })
+    }
   }
 
   const handleGenerateBasedOn = (content: Content) => {
@@ -758,30 +811,162 @@ export function ContentLibrary() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>State (Optional)</Label>
-                  <Input
-                    value={generateForm.state}
-                    onChange={(e) => setGenerateForm({ ...generateForm, state: e.target.value })}
-                    placeholder="e.g., Bavaria, California"
-                  />
+                  {isAddingNewState ? (
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Enter state name"
+                        value={newState}
+                        onChange={(e) => setNewState(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddState())}
+                      />
+                      <Button type="button" onClick={handleAddState} size="sm">
+                        Add
+                      </Button>
+                      <Button 
+                        type="button" 
+                        onClick={() => setIsAddingNewState(false)} 
+                        variant="outline" 
+                        size="sm"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <Select
+                      value={generateForm.state || 'none'}
+                      onValueChange={(value) => {
+                        if (value === 'add_new') {
+                          setIsAddingNewState(true)
+                        } else if (value === 'none') {
+                          setGenerateForm({ ...generateForm, state: '' })
+                        } else {
+                          setGenerateForm({ ...generateForm, state: value })
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No state</SelectItem>
+                        {states.map((state) => (
+                          <SelectItem key={state._id} value={state.name}>
+                            {state.name}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="add_new" className="text-blue-600 font-medium">
+                          + Add New State
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <div>
                   <Label>School Type (Optional)</Label>
-                  <Input
-                    value={generateForm.schoolType}
-                    onChange={(e) => setGenerateForm({ ...generateForm, schoolType: e.target.value })}
-                    placeholder="e.g., Gymnasium, High School"
-                  />
+                  {isAddingNewSchoolType ? (
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Enter school type"
+                        value={newSchoolType}
+                        onChange={(e) => setNewSchoolType(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSchoolType())}
+                      />
+                      <Button type="button" onClick={handleAddSchoolType} size="sm">
+                        Add
+                      </Button>
+                      <Button 
+                        type="button" 
+                        onClick={() => setIsAddingNewSchoolType(false)} 
+                        variant="outline" 
+                        size="sm"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <Select
+                      value={generateForm.schoolType || 'none'}
+                      onValueChange={(value) => {
+                        if (value === 'add_new') {
+                          setIsAddingNewSchoolType(true)
+                        } else if (value === 'none') {
+                          setGenerateForm({ ...generateForm, schoolType: '' })
+                        } else {
+                          setGenerateForm({ ...generateForm, schoolType: value })
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select school type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No school type</SelectItem>
+                        {schoolTypes.map((type) => (
+                          <SelectItem key={type._id} value={type.name}>
+                            {type.name}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="add_new" className="text-blue-600 font-medium">
+                          + Add New School Type
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Grade (Optional)</Label>
-                  <Input
-                    value={generateForm.grade}
-                    onChange={(e) => setGenerateForm({ ...generateForm, grade: e.target.value })}
-                    placeholder="e.g., 9, 10, 11"
-                  />
+                  {isAddingNewGrade ? (
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Enter grade"
+                        value={newGrade}
+                        onChange={(e) => setNewGrade(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddGrade())}
+                      />
+                      <Button type="button" onClick={handleAddGrade} size="sm">
+                        Add
+                      </Button>
+                      <Button 
+                        type="button" 
+                        onClick={() => setIsAddingNewGrade(false)} 
+                        variant="outline" 
+                        size="sm"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <Select
+                      value={generateForm.grade || 'none'}
+                      onValueChange={(value) => {
+                        if (value === 'add_new') {
+                          setIsAddingNewGrade(true)
+                        } else if (value === 'none') {
+                          setGenerateForm({ ...generateForm, grade: '' })
+                        } else {
+                          setGenerateForm({ ...generateForm, grade: value })
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select grade (1-12)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No grade</SelectItem>
+                        {grades.map((grade) => (
+                          <SelectItem key={grade._id} value={grade.name}>
+                            {grade.name}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="add_new" className="text-blue-600 font-medium">
+                          + Add New Grade
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <div>
                   <Label>Difficulty Level</Label>
