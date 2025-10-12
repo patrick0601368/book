@@ -408,6 +408,8 @@ export function ContentLibrary() {
   }
 
   const handleGenerateBasedOn = (content: Content) => {
+    console.log('handleGenerateBasedOn called with:', content.title)
+    
     // Store the base content for context
     setBaseContent(content)
     
@@ -430,8 +432,12 @@ export function ContentLibrary() {
       customPrompt: '',
       provider: 'openai' // Default to OpenAI, user can change
     })
+    
+    console.log('Setting showGenerateModal to true')
     setShowGenerateModal(true)
     setSelectedContent(null) // Close the view modal
+    
+    console.log('Modal should now be visible')
   }
 
   const handleGenerateNew = async () => {
@@ -873,7 +879,10 @@ export function ContentLibrary() {
       )}
 
       {/* Generate Based On Modal */}
-      {showGenerateModal && !generatedNewContent && (
+      {(() => {
+        console.log('Modal condition check:', { showGenerateModal, generatedNewContent: generatedNewContent.length })
+        return showGenerateModal && !generatedNewContent
+      })() && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-4 border-b">
