@@ -183,8 +183,6 @@ export function ContentLibrary() {
       
       // Initial render
       setTimeout(renderMath, 100)
-      // Backup render
-      setTimeout(renderMath, 500)
     }
   }, [selectedContent])
 
