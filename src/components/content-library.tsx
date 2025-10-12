@@ -1405,10 +1405,10 @@ export function ContentLibrary() {
             <div className="border-t p-4 flex gap-2">
               <Button
                 onClick={handleSaveGeneratedContent}
-                disabled={isSaving || !editableContent.trim()}
                 className="flex-1"
               >
-                {isSaving ? "Saving..." : "Save Content"}
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Save Content
               </Button>
               <Button 
                 onClick={() => {
