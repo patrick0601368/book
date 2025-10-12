@@ -189,8 +189,13 @@ export function ContentLibrary() {
           ;(window as any).MathJax.typesetPromise?.()
             .then(() => console.log('MathJax rendering complete'))
             .catch((err: any) => console.error('MathJax error:', err))
-        } 
+        } else {
+          setTimeout(renderMath, 500)
+        }
       }
+      setTimeout(renderMath, 100)
+      setTimeout(renderMath, 500)
+
     }
   }, [generatedNewContent, showGenerateModal, editableContent])
 
