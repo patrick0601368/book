@@ -6,13 +6,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Search, FileText, BookOpen, ClipboardList, Eye, X, Sparkles, CheckCircle2, Download } from 'lucide-react'
+import { Loader2, Search, FileText, BookOpen, ClipboardList, Eye, X, Sparkles, CheckCircle2 } from 'lucide-react'
 import { apiClient } from '@/lib/api'
 import { marked } from 'marked'
 import { useToast } from '@/hooks/use-toast'
 import countries from 'i18n-iso-countries'
 import enLocale from 'i18n-iso-countries/langs/en.json'
-import { generatePDF, generateSimplePDF, type ContentData } from '@/lib/pdf-utils'
 
 countries.registerLocale(enLocale)
 
@@ -29,7 +28,6 @@ interface Content {
   grade?: string
   language?: string
   country?: string
-  basedOnId?: string
   creatorName?: string
   creatorEmail?: string
   createdAt: string
@@ -110,8 +108,6 @@ export function ContentLibrary() {
   const renderMarkdown = (content: string) => {
     if (!content) return ''
     
-    console.log('📝 renderMarkdown called, content length:', content.length)
-    
     try {
       // Step 1: Protect LaTeX from markdown parser by replacing with placeholders
       const latexPlaceholders: { [key: string]: string } = {}
@@ -155,9 +151,12 @@ export function ContentLibrary() {
       // Step 2: Parse markdown
       let html = marked.parse(protectedContent) as string
       
-      // Step 3: Restore LaTeX placeholders - use split/join instead of regex
+      // Step 3: Restore LaTeX placeholders
       Object.keys(latexPlaceholders).forEach(placeholder => {
-        html = html.split(placeholder).join(latexPlaceholders[placeholder])
+        // Escape special regex characters in placeholder
+        const escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const regex = new RegExp(escapedPlaceholder, 'g')
+        html = html.replace(regex, latexPlaceholders[placeholder])
       })
       
       return html
@@ -167,64 +166,12 @@ export function ContentLibrary() {
     }
   }
 
-  // PDF generation function
-  const handleDownloadPDF = async (content: Content) => {
-    try {
-      const contentData: ContentData = {
-        title: content.title,
-        topic: content.topic,
-        subject: content.subject,
-        content: content.content,
-        difficulty: content.difficulty,
-        grade: content.grade,
-        state: content.state,
-        schoolType: content.schoolType,
-        language: content.language,
-        country: content.country,
-      };
-
-      // Try to capture the rendered element for better formatting
-      const element = document.getElementById('content-library-preview');
-      if (element) {
-        await generatePDF(contentData, element);
-      } else {
-        generateSimplePDF(contentData);
-      }
-      
-      toast({
-        title: "PDF Generated",
-        description: "Your content has been downloaded as a PDF.",
-      });
-    } catch (error) {
-      console.error('Failed to generate PDF:', error);
-      // Fallback to simple PDF
-      const contentData: ContentData = {
-        title: content.title,
-        topic: content.topic,
-        subject: content.subject,
-        content: content.content,
-        difficulty: content.difficulty,
-        grade: content.grade,
-        state: content.state,
-        schoolType: content.schoolType,
-        language: content.language,
-        country: content.country,
-      };
-      generateSimplePDF(contentData);
-      
-      toast({
-        title: "PDF Generated",
-        description: "Your content has been downloaded as a PDF (simple format).",
-      });
-    }
-  };
-
   // Trigger MathJax rendering after content changes
   useEffect(() => {
     if (selectedContent) {
       const renderMath = () => {
         if (typeof window !== 'undefined' && (window as any).MathJax) {
-          console.log('Triggering MathJax typeset for library preview...')
+          console.log('Triggering MathJax typeset for library...')
           ;(window as any).MathJax.typesetPromise?.()
             .then(() => console.log('MathJax rendering complete'))
             .catch((err: any) => console.error('MathJax error:', err))
@@ -243,25 +190,21 @@ export function ContentLibrary() {
 
   // Trigger MathJax for generated content preview
   useEffect(() => {
-    if (showGenerateModal) {
+    if (generatedNewContent && showGenerateModal) {
       const renderMath = () => {
         if (typeof window !== 'undefined' && (window as any).MathJax) {
-          console.log('Triggering MathJax typeset for preview...')
+          console.log('Triggering MathJax typeset for generated content preview...')
           ;(window as any).MathJax.typesetPromise?.()
             .then(() => console.log('MathJax rendering complete'))
             .catch((err: any) => console.error('MathJax error:', err))
         } else {
-          // MathJax not loaded yet, try again
           setTimeout(renderMath, 500)
         }
       }
-      
-      // Initial render
       setTimeout(renderMath, 100)
-      // Backup render
       setTimeout(renderMath, 500)
     }
-  }, [showGenerateModal, editableContent])
+  }, [generatedNewContent, showGenerateModal, editableContent])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -408,15 +351,8 @@ export function ContentLibrary() {
   }
 
   const handleGenerateBasedOn = (content: Content) => {
-    console.log('handleGenerateBasedOn called with:', content.title)
-    
     // Store the base content for context
     setBaseContent(content)
-    
-    // Clear any previous generated content
-    setGeneratedNewContent('')
-    setEditableContent('')
-    setRefinementPrompt('')
     
     // Pre-fill form with existing content data
     setGenerateForm({
@@ -430,14 +366,10 @@ export function ContentLibrary() {
       language: content.language || 'English',
       country: content.country || '',
       customPrompt: '',
-      provider: 'openai' // Default to OpenAI, user can change
+      provider: 'openai'
     })
-    
-    console.log('Setting showGenerateModal to true')
     setShowGenerateModal(true)
     setSelectedContent(null) // Close the view modal
-    
-    console.log('Modal should now be visible')
   }
 
   const handleGenerateNew = async () => {
@@ -526,9 +458,6 @@ export function ContentLibrary() {
         state: generateForm.state,
         schoolType: generateForm.schoolType,
         grade: generateForm.grade,
-        language: generateForm.language,
-        country: generateForm.country,
-        basedOnId: baseContent?._id, // Store the ID of the content this was based on
       })
       
       toast({
@@ -760,25 +689,15 @@ export function ContentLibrary() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-2 ml-4">
-                        <Button
-                          onClick={() => setSelectedContent(content)}
-                          size="sm"
-                          variant="outline"
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
-                        <Button
-                          onClick={() => handleDownloadPDF(content)}
-                          size="sm"
-                          variant="outline"
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                        >
-                          <Download className="h-4 w-4 mr-1" />
-                          PDF
-                        </Button>
-                      </div>
+                      <Button
+                        onClick={() => setSelectedContent(content)}
+                        size="sm"
+                        variant="outline"
+                        className="ml-4"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -796,29 +715,17 @@ export function ContentLibrary() {
                 <h2 className="text-xl font-bold">{selectedContent.title}</h2>
                 <p className="text-sm text-gray-600">{selectedContent.topic}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={() => handleDownloadPDF(selectedContent)}
-                  variant="outline"
-                  size="sm"
-                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  Download PDF
-                </Button>
-                <Button
-                  onClick={() => setSelectedContent(null)}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
+              <Button
+                onClick={() => setSelectedContent(null)}
+                variant="ghost"
+                size="sm"
+              >
+                <X className="h-5 w-5" />
+              </Button>
             </div>
 
             <div className="flex-1 overflow-auto p-8 bg-white">
               <div 
-                id="content-library-preview"
                 className="prose prose-lg max-w-none"
                 dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedContent.content) }}
               />
@@ -845,22 +752,6 @@ export function ContentLibrary() {
                     {selectedContent.creatorName && (
                       <p className="mt-1">Creator: <span className="font-medium">{selectedContent.creatorName}</span></p>
                     )}
-                    {selectedContent.basedOnId && (
-                      <p className="mt-1">
-                        Based on: 
-                        <button 
-                          onClick={() => {
-                            const sourceContent = contents.find(c => c._id === selectedContent.basedOnId)
-                            if (sourceContent) {
-                              setSelectedContent(sourceContent)
-                            }
-                          }}
-                          className="ml-1 text-blue-600 hover:text-blue-800 underline font-medium"
-                        >
-                          {selectedContent.basedOnId.substring(0, 8)}...
-                        </button>
-                      </p>
-                    )}
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -879,12 +770,9 @@ export function ContentLibrary() {
       )}
 
       {/* Generate Based On Modal */}
-      {(() => {
-        console.log('Modal condition check:', { showGenerateModal, generatedNewContent: generatedNewContent.length })
-        return showGenerateModal && !generatedNewContent
-      })() && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4" style={{backgroundColor: 'rgba(255,0,0,0.3)'}}>
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col" style={{border: '5px solid red'}}>
+      {showGenerateModal && !generatedNewContent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-4 border-b">
               <h2 className="text-xl font-bold">Generate New Content Based on Existing</h2>
               <Button
@@ -1267,7 +1155,6 @@ export function ContentLibrary() {
               </div>
               <div className="flex-1 overflow-auto px-8 py-6 bg-white">
                 <div 
-                  id="generated-content-preview"
                   className="prose prose-lg max-w-none"
                   dangerouslySetInnerHTML={{ __html: renderMarkdown(editableContent) }}
                 />
@@ -1307,132 +1194,6 @@ export function ContentLibrary() {
             <div className="flex gap-2">
               <Button 
                 onClick={handleSaveGeneratedContent} 
-                className="flex-1"
-              >
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                Save Content
-              </Button>
-              <Button 
-                onClick={() => {
-                  setShowGenerateModal(false)
-                  setGeneratedNewContent('')
-                  setEditableContent('')
-                  setRefinementPrompt('')
-                  setBaseContent(null)
-                }} 
-                variant="outline"
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Generated Content Preview Modal */}
-      {generatedNewContent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-xl font-bold">Generated Content Preview</h2>
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={() => {
-                    setShowGenerateModal(true)
-                    setGeneratedNewContent('')
-                    setEditableContent('')
-                    setRefinementPrompt('')
-                    // Pre-fill form with base content data (keep everything as it was)
-                    setGenerateForm({
-                      subject: baseContent?.subject || '',
-                      topic: baseContent?.topic || '',
-                      difficulty: baseContent?.difficulty || 'beginner',
-                      type: baseContent?.type || 'learning-page',
-                      state: baseContent?.state || '',
-                      schoolType: baseContent?.schoolType || '',
-                      grade: baseContent?.grade || '',
-                      language: baseContent?.language || 'English',
-                      country: baseContent?.country || '',
-                      customPrompt: '', // Clear custom prompt to show placeholder
-                      provider: generateForm.provider // Keep current provider selection
-                    })
-                  }}
-                  variant="outline"
-                  size="sm"
-                >
-                  New Generation
-                </Button>
-                <Button
-                  onClick={() => {
-                    setShowGenerateModal(false)
-                    setGeneratedNewContent('')
-                    setEditableContent('')
-                    setRefinementPrompt('')
-                    setBaseContent(null)
-                  }}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-            
-            <div className="flex-1 flex overflow-hidden">
-              {/* Editor */}
-              <div className="w-1/2 border-r flex flex-col">
-                <div className="p-3 border-b bg-gray-50">
-                  <Label className="text-sm font-medium">Editor</Label>
-                </div>
-                <div className="flex-1 p-4">
-                  <textarea
-                    value={editableContent}
-                    onChange={(e) => setEditableContent(e.target.value)}
-                    className="w-full h-full border rounded-md p-3 resize-none font-mono text-sm"
-                    placeholder="Edit the generated content..."
-                  />
-                </div>
-              </div>
-
-              {/* Preview */}
-              <div className="w-1/2 flex flex-col">
-                <div className="p-3 border-b bg-gray-50">
-                  <Label className="text-sm font-medium">Preview</Label>
-                </div>
-                <div className="flex-1 p-4 overflow-auto">
-                  <div 
-                    id="content-library-preview"
-                    className="prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ __html: renderMarkdown(editableContent) }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Refinement Section */}
-            <div className="border-t p-4">
-              <div className="flex gap-2">
-                <Input
-                  value={refinementPrompt}
-                  onChange={(e) => setRefinementPrompt(e.target.value)}
-                  placeholder="Enter refinement instructions..."
-                  className="flex-1"
-                />
-                <Button
-                  onClick={handleRefine}
-                  disabled={isRefining || !refinementPrompt.trim()}
-                  variant="outline"
-                >
-                  {isRefining ? "Refining..." : "Refine"}
-                </Button>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="border-t p-4 flex gap-2">
-              <Button
-                onClick={handleSaveGeneratedContent}
                 className="flex-1"
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
