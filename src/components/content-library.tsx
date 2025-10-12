@@ -883,8 +883,8 @@ export function ContentLibrary() {
         console.log('Modal condition check:', { showGenerateModal, generatedNewContent: generatedNewContent.length })
         return showGenerateModal && !generatedNewContent
       })() && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4" style={{backgroundColor: 'rgba(255,0,0,0.3)'}}>
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col" style={{border: '5px solid red'}}>
             <div className="flex items-center justify-between p-4 border-b">
               <h2 className="text-xl font-bold">Generate New Content Based on Existing</h2>
               <Button
@@ -1222,7 +1222,7 @@ export function ContentLibrary() {
       )}
 
       {/* Full-Screen Preview Modal (matches main generator) */}
-      {showGenerateModal && (
+      {showGenerateModal && generatedNewContent && (
         <div className="fixed inset-0 bg-white z-50 flex flex-col">
           {/* Header */}
           <div className="p-4 border-b bg-white flex items-center justify-between">
