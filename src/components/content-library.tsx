@@ -109,6 +109,8 @@ export function ContentLibrary() {
   const renderMarkdown = (content: string) => {
     if (!content) return ''
     
+    console.log('📝 renderMarkdown called, content length:', content.length)
+    
     try {
       // Step 1: Protect LaTeX from markdown parser by replacing with placeholders
       const latexPlaceholders: { [key: string]: string } = {}
@@ -191,27 +193,49 @@ export function ContentLibrary() {
 
   // Trigger MathJax for generated content preview
   useEffect(() => {
-    if (!showGenerateModal) return
+    console.log('🔄 Preview useEffect triggered - showGenerateModal:', showGenerateModal, 'editableContent length:', editableContent?.length)
+    
+    if (!showGenerateModal) {
+      console.log('⏹️ Skipping MathJax - modal not shown')
+      return
+    }
 
     let timeoutId: NodeJS.Timeout
+    let cancelled = false
 
     const renderMath = () => {
+      if (cancelled) {
+        console.log('⚠️ MathJax render cancelled (cleanup called)')
+        return
+      }
+      
       const mj = (window as any).MathJax
       if (typeof window !== 'undefined' && mj?.typesetPromise) {
-        console.log('Triggering MathJax typeset for generated content preview...')
+        console.log('✅ Starting MathJax typeset...')
+        const startTime = Date.now()
+        
         mj.typesetPromise()
-          .then(() => console.log('MathJax rendering complete'))
-          .catch((err: any) => console.error('MathJax error:', err))
+          .then(() => {
+            const duration = Date.now() - startTime
+            console.log(`✅ MathJax rendering complete (took ${duration}ms)`)
+          })
+          .catch((err: any) => console.error('❌ MathJax error:', err))
       } else {
+        console.log('⏳ MathJax not ready, retrying in 300ms...')
         // MathJax not loaded yet, retry once
         timeoutId = setTimeout(renderMath, 300)
       }
     }
 
     // Trigger once, not twice
+    console.log('⏰ Scheduling MathJax render in 200ms...')
     timeoutId = setTimeout(renderMath, 200)
 
-    return () => clearTimeout(timeoutId)
+    return () => {
+      console.log('🧹 Cleanup called - cancelling pending MathJax render')
+      cancelled = true
+      clearTimeout(timeoutId)
+    }
   }, [showGenerateModal, editableContent])
 
   useEffect(() => {
