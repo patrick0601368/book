@@ -442,6 +442,7 @@ export function ContentGenerator() {
     setGeneratedContent('')
     setEditableContent('')
     setRefinementPrompt('')
+    // Keep the form data so user can modify and generate again
   }
 
   return (
