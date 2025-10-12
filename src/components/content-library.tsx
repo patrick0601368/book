@@ -1404,7 +1404,7 @@ export function ContentLibrary() {
             {/* Action Buttons */}
             <div className="border-t p-4 flex gap-2">
               <Button
-                onClick={handleSaveGenerated}
+                onClick={handleSaveGeneratedContent}
                 disabled={isSaving || !editableContent.trim()}
                 className="flex-1"
               >
