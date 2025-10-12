@@ -6,12 +6,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Search, FileText, BookOpen, ClipboardList, Eye, X, Sparkles, CheckCircle2 } from 'lucide-react'
+import { Loader2, Search, FileText, BookOpen, ClipboardList, Eye, X, Sparkles, CheckCircle2, Download } from 'lucide-react'
 import { apiClient } from '@/lib/api'
 import { marked } from 'marked'
 import { useToast } from '@/hooks/use-toast'
 import countries from 'i18n-iso-countries'
 import enLocale from 'i18n-iso-countries/langs/en.json'
+import { generatePDF, generateSimplePDF, type ContentData } from '@/lib/pdf-utils'
 
 countries.registerLocale(enLocale)
 
@@ -165,6 +166,58 @@ export function ContentLibrary() {
       return `<div class="text-gray-900">${content.replace(/\n/g, '<br>')}</div>`
     }
   }
+
+  // PDF generation function
+  const handleDownloadPDF = async (content: Content) => {
+    try {
+      const contentData: ContentData = {
+        title: content.title,
+        topic: content.topic,
+        subject: content.subject,
+        content: content.content,
+        difficulty: content.difficulty,
+        grade: content.grade,
+        state: content.state,
+        schoolType: content.schoolType,
+        language: content.language,
+        country: content.country,
+      };
+
+      // Try to capture the rendered element for better formatting
+      const element = document.getElementById('content-library-preview');
+      if (element) {
+        await generatePDF(contentData, element);
+      } else {
+        generateSimplePDF(contentData);
+      }
+      
+      toast({
+        title: "PDF Generated",
+        description: "Your content has been downloaded as a PDF.",
+      });
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+      // Fallback to simple PDF
+      const contentData: ContentData = {
+        title: content.title,
+        topic: content.topic,
+        subject: content.subject,
+        content: content.content,
+        difficulty: content.difficulty,
+        grade: content.grade,
+        state: content.state,
+        schoolType: content.schoolType,
+        language: content.language,
+        country: content.country,
+      };
+      generateSimplePDF(contentData);
+      
+      toast({
+        title: "PDF Generated",
+        description: "Your content has been downloaded as a PDF (simple format).",
+      });
+    }
+  };
 
   // Trigger MathJax rendering after content changes
   useEffect(() => {
@@ -696,15 +749,25 @@ export function ContentLibrary() {
                           </div>
                         </div>
                       </div>
-                      <Button
-                        onClick={() => setSelectedContent(content)}
-                        size="sm"
-                        variant="outline"
-                        className="ml-4"
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
+                      <div className="flex gap-2 ml-4">
+                        <Button
+                          onClick={() => setSelectedContent(content)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                        <Button
+                          onClick={() => handleDownloadPDF(content)}
+                          size="sm"
+                          variant="outline"
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          PDF
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -722,13 +785,24 @@ export function ContentLibrary() {
                 <h2 className="text-xl font-bold">{selectedContent.title}</h2>
                 <p className="text-sm text-gray-600">{selectedContent.topic}</p>
               </div>
-              <Button
-                onClick={() => setSelectedContent(null)}
-                variant="ghost"
-                size="sm"
-              >
-                <X className="h-5 w-5" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => handleDownloadPDF(selectedContent)}
+                  variant="outline"
+                  size="sm"
+                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  Download PDF
+                </Button>
+                <Button
+                  onClick={() => setSelectedContent(null)}
+                  variant="ghost"
+                  size="sm"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-auto p-8 bg-white">

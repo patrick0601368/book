@@ -6,12 +6,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Sparkles, CheckCircle2 } from 'lucide-react'
+import { Loader2, Sparkles, CheckCircle2, Download } from 'lucide-react'
 import { apiClient } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 import { marked } from 'marked'
 import countries from 'i18n-iso-countries'
 import enLocale from 'i18n-iso-countries/langs/en.json'
+import { generatePDF, generateSimplePDF, type ContentData } from '@/lib/pdf-utils'
 
 // Register English locale for country names
 countries.registerLocale(enLocale)
@@ -160,6 +161,67 @@ export function ContentGenerator() {
       setTimeout(renderMath, 500)
     }
   }, [showPreview, editableContent])
+
+  // PDF generation function
+  const handleDownloadPDF = async () => {
+    if (!editableContent) {
+      toast({
+        title: "No Content",
+        description: "Please generate some content first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      const contentData: ContentData = {
+        title: formData.topic || 'Generated Content',
+        topic: formData.topic || '',
+        subject: formData.subject || '',
+        content: editableContent,
+        difficulty: formData.difficulty,
+        grade: formData.grade,
+        state: formData.state,
+        schoolType: formData.schoolType,
+        language: formData.language,
+        country: formData.country,
+      };
+
+      // Try to capture the rendered element for better formatting
+      const element = document.querySelector('.prose') as HTMLElement;
+      if (element) {
+        await generatePDF(contentData, element);
+      } else {
+        generateSimplePDF(contentData);
+      }
+      
+      toast({
+        title: "PDF Generated",
+        description: "Your content has been downloaded as a PDF.",
+      });
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+      // Fallback to simple PDF
+      const contentData: ContentData = {
+        title: formData.topic || 'Generated Content',
+        topic: formData.topic || '',
+        subject: formData.subject || '',
+        content: editableContent,
+        difficulty: formData.difficulty,
+        grade: formData.grade,
+        state: formData.state,
+        schoolType: formData.schoolType,
+        language: formData.language,
+        country: formData.country,
+      };
+      generateSimplePDF(contentData);
+      
+      toast({
+        title: "PDF Generated",
+        description: "Your content has been downloaded as a PDF (simple format).",
+      });
+    }
+  };
 
   // Load subjects from database
   useEffect(() => {
@@ -784,6 +846,15 @@ export function ContentGenerator() {
                 <span className="text-sm text-gray-500">
                   Powered by {selectedProvider === 'mistral' ? 'Mistral AI' : 'OpenAI GPT-4'}
                 </span>
+                <Button
+                  onClick={handleDownloadPDF}
+                  variant="outline"
+                  size="sm"
+                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  Download PDF
+                </Button>
                 <Button 
                   onClick={handleNewGeneration} 
                   variant="outline" 
