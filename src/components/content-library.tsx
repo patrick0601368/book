@@ -1315,6 +1315,118 @@ export function ContentLibrary() {
           </div>
         </div>
       )}
+
+      {/* Generated Content Preview Modal */}
+      {generatedNewContent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-xl font-bold">Generated Content Preview</h2>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => {
+                    setShowGenerateModal(true)
+                    setGeneratedNewContent('')
+                    setEditableContent('')
+                    setRefinementPrompt('')
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  New Generation
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowGenerateModal(false)
+                    setGeneratedNewContent('')
+                    setEditableContent('')
+                    setRefinementPrompt('')
+                    setBaseContent(null)
+                  }}
+                  variant="ghost"
+                  size="sm"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex-1 flex overflow-hidden">
+              {/* Editor */}
+              <div className="w-1/2 border-r flex flex-col">
+                <div className="p-3 border-b bg-gray-50">
+                  <Label className="text-sm font-medium">Editor</Label>
+                </div>
+                <div className="flex-1 p-4">
+                  <textarea
+                    value={editableContent}
+                    onChange={(e) => setEditableContent(e.target.value)}
+                    className="w-full h-full border rounded-md p-3 resize-none font-mono text-sm"
+                    placeholder="Edit the generated content..."
+                  />
+                </div>
+              </div>
+
+              {/* Preview */}
+              <div className="w-1/2 flex flex-col">
+                <div className="p-3 border-b bg-gray-50">
+                  <Label className="text-sm font-medium">Preview</Label>
+                </div>
+                <div className="flex-1 p-4 overflow-auto">
+                  <div 
+                    id="content-library-preview"
+                    className="prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown(editableContent) }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Refinement Section */}
+            <div className="border-t p-4">
+              <div className="flex gap-2">
+                <Input
+                  value={refinementPrompt}
+                  onChange={(e) => setRefinementPrompt(e.target.value)}
+                  placeholder="Enter refinement instructions..."
+                  className="flex-1"
+                />
+                <Button
+                  onClick={handleRefine}
+                  disabled={isRefining || !refinementPrompt.trim()}
+                  variant="outline"
+                >
+                  {isRefining ? "Refining..." : "Refine"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="border-t p-4 flex gap-2">
+              <Button
+                onClick={handleSaveGenerated}
+                disabled={isSaving || !editableContent.trim()}
+                className="flex-1"
+              >
+                {isSaving ? "Saving..." : "Save Content"}
+              </Button>
+              <Button 
+                onClick={() => {
+                  setShowGenerateModal(false)
+                  setGeneratedNewContent('')
+                  setEditableContent('')
+                  setRefinementPrompt('')
+                  setBaseContent(null)
+                }} 
+                variant="outline"
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
