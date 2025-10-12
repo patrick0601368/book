@@ -1134,7 +1134,7 @@ export function ContentLibrary() {
       )}
 
       {/* Full-Screen Preview Modal (matches main generator) */}
-      {showGenerateModal && generatedNewContent && (
+      {showGenerateModal && (
         <div className="fixed inset-0 bg-white z-50 flex flex-col">
           {/* Header */}
           <div className="p-4 border-b bg-white flex items-center justify-between">
