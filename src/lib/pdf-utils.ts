@@ -109,7 +109,7 @@ export const generatePDF = async (contentData: ContentData, element?: HTMLElemen
     }
 
     // Add footer with generation date
-    const pageCount = pdf.getNumberOfPages();
+    const pageCount = pdf.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       pdf.setPage(i);
       pdf.setFontSize(8);
