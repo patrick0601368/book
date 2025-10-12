@@ -177,9 +177,6 @@ export function ContentLibrary() {
             .catch((err: any) => console.error('MathJax error:', err))
         } 
       }
-      
-      // Initial render
-      setTimeout(renderMath, 100)
     }
   }, [selectedContent])
 
@@ -194,7 +191,6 @@ export function ContentLibrary() {
             .catch((err: any) => console.error('MathJax error:', err))
         } 
       }
-      setTimeout(renderMath, 100)
     }
   }, [generatedNewContent, showGenerateModal, editableContent])
 
