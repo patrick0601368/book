@@ -168,73 +168,45 @@ export function ContentLibrary() {
 
   // Trigger MathJax rendering after content changes
   useEffect(() => {
-    if (!selectedContent) return
-
-    let timeoutId: NodeJS.Timeout
-
-    const renderMath = () => {
-      const mj = (window as any).MathJax
-      if (typeof window !== 'undefined' && mj?.typesetPromise) {
-        console.log('Triggering MathJax typeset for library preview...')
-        mj.typesetPromise()
-          .then(() => console.log('MathJax rendering complete'))
-          .catch((err: any) => console.error('MathJax error:', err))
-      } else {
-        // MathJax not loaded yet, retry once
-        timeoutId = setTimeout(renderMath, 300)
+    if (selectedContent) {
+      const renderMath = () => {
+        if (typeof window !== 'undefined' && (window as any).MathJax) {
+          console.log('Triggering MathJax typeset for library preview...')
+          ;(window as any).MathJax.typesetPromise?.()
+            .then(() => console.log('MathJax rendering complete'))
+            .catch((err: any) => console.error('MathJax error:', err))
+        } else {
+          // MathJax not loaded yet, try again
+          setTimeout(renderMath, 500)
+        }
       }
+      
+      // Initial render
+      setTimeout(renderMath, 100)
+      // Backup render
+      setTimeout(renderMath, 500)
     }
-
-    // Trigger once, not twice
-    timeoutId = setTimeout(renderMath, 200)
-
-    return () => clearTimeout(timeoutId)
   }, [selectedContent])
 
   // Trigger MathJax for generated content preview
   useEffect(() => {
-    console.log('🔄 Preview useEffect triggered - showGenerateModal:', showGenerateModal, 'editableContent length:', editableContent?.length)
-    
-    if (!showGenerateModal) {
-      console.log('⏹️ Skipping MathJax - modal not shown')
-      return
-    }
-
-    let timeoutId: NodeJS.Timeout
-    let cancelled = false
-
-    const renderMath = () => {
-      if (cancelled) {
-        console.log('⚠️ MathJax render cancelled (cleanup called)')
-        return
+    if (showGenerateModal) {
+      const renderMath = () => {
+        if (typeof window !== 'undefined' && (window as any).MathJax) {
+          console.log('Triggering MathJax typeset for preview...')
+          ;(window as any).MathJax.typesetPromise?.()
+            .then(() => console.log('MathJax rendering complete'))
+            .catch((err: any) => console.error('MathJax error:', err))
+        } else {
+          // MathJax not loaded yet, try again
+          setTimeout(renderMath, 500)
+        }
       }
       
-      const mj = (window as any).MathJax
-      if (typeof window !== 'undefined' && mj?.typesetPromise) {
-        console.log('✅ Starting MathJax typeset...')
-        const startTime = Date.now()
-        
-        mj.typesetPromise()
-          .then(() => {
-            const duration = Date.now() - startTime
-            console.log(`✅ MathJax rendering complete (took ${duration}ms)`)
-          })
-          .catch((err: any) => console.error('❌ MathJax error:', err))
-      } else {
-        console.log('⏳ MathJax not ready, retrying in 300ms...')
-        // MathJax not loaded yet, retry once
-        timeoutId = setTimeout(renderMath, 300)
-      }
-    }
-
-    // Trigger once, not twice
-    console.log('⏰ Scheduling MathJax render in 200ms...')
-    timeoutId = setTimeout(renderMath, 200)
-
-    return () => {
-      console.log('🧹 Cleanup called - cancelling pending MathJax render')
-      cancelled = true
-      clearTimeout(timeoutId)
+      // Initial render
+      setTimeout(renderMath, 100)
+      // Backup render
+      setTimeout(renderMath, 500)
     }
   }, [showGenerateModal, editableContent])
 
