@@ -411,6 +411,11 @@ export function ContentLibrary() {
     // Store the base content for context
     setBaseContent(content)
     
+    // Clear any previous generated content
+    setGeneratedNewContent('')
+    setEditableContent('')
+    setRefinementPrompt('')
+    
     // Pre-fill form with existing content data
     setGenerateForm({
       subject: content.subject,
@@ -423,7 +428,7 @@ export function ContentLibrary() {
       language: content.language || 'English',
       country: content.country || '',
       customPrompt: '',
-      provider: 'openai'
+      provider: 'openai' // Default to OpenAI, user can change
     })
     setShowGenerateModal(true)
     setSelectedContent(null) // Close the view modal
@@ -1329,6 +1334,20 @@ export function ContentLibrary() {
                     setGeneratedNewContent('')
                     setEditableContent('')
                     setRefinementPrompt('')
+                    // Pre-fill form with base content data (keep everything as it was)
+                    setGenerateForm({
+                      subject: baseContent?.subject || '',
+                      topic: baseContent?.topic || '',
+                      difficulty: baseContent?.difficulty || 'beginner',
+                      type: baseContent?.type || 'learning-page',
+                      state: baseContent?.state || '',
+                      schoolType: baseContent?.schoolType || '',
+                      grade: baseContent?.grade || '',
+                      language: baseContent?.language || 'English',
+                      country: baseContent?.country || '',
+                      customPrompt: '', // Clear custom prompt to show placeholder
+                      provider: generateForm.provider // Keep current provider selection
+                    })
                   }}
                   variant="outline"
                   size="sm"
