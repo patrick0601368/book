@@ -17,7 +17,7 @@ You only need **4 environment variables** now:
 
 ```env
 # MongoDB Connection
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/learning-platform?retryWrites=true&w=majority
+MONGODB_URI=mongo-key
 
 # NextAuth Configuration  
 NEXTAUTH_URL=http://localhost:3000
