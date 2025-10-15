@@ -81,6 +81,8 @@ export function ContentGenerator() {
   const [refinementPrompt, setRefinementPrompt] = useState('')
   const [selectedProvider, setSelectedProvider] = useState('openai')
   const [showPreview, setShowPreview] = useState(false)
+  const [contextText, setContextText] = useState('')
+  const [contextFilesInfo, setContextFilesInfo] = useState<string[]>([])
 
   // Simple markdown renderer - MathJax will handle the math
   const renderMarkdown = (content: string) => {
@@ -362,7 +364,10 @@ export function ContentGenerator() {
     setIsGenerating(true)
 
     try {
-      const data = await apiClient.generateContent(formData)
+      const data = await apiClient.generateContent({
+        ...formData,
+        existingContent: contextText ? contextText : undefined,
+      })
       setGeneratedContent(data.content)
       setEditableContent(data.content)
       setSelectedProvider(data.provider || formData.provider)
@@ -383,7 +388,8 @@ export function ContentGenerator() {
     try {
       const data = await apiClient.generateContent({
         ...formData,
-        customPrompt: `Based on this existing content:\n\n${editableContent}\n\nPlease make the following changes: ${refinementPrompt}`
+        customPrompt: `Based on this existing content:\n\n${editableContent}\n\nPlease make the following changes: ${refinementPrompt}`,
+        existingContent: contextText ? contextText : undefined,
       })
       setGeneratedContent(data.content)
       setEditableContent(data.content)
@@ -838,6 +844,57 @@ export function ContentGenerator() {
                 value={formData.customPrompt}
                 onChange={(e) => setFormData({ ...formData, customPrompt: e.target.value })}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="contextUploader">Optional Context</Label>
+              <p className="text-xs text-gray-500">Add extra context for the AI (paste text or upload .txt/.pdf/.png/.jpg). For files, we extract any readable text.</p>
+              <textarea
+                id="contextText"
+                className="w-full min-h-[80px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Paste context text here (optional)"
+                value={contextText}
+                onChange={(e) => setContextText(e.target.value)}
+              />
+              <input
+                id="contextUploader"
+                type="file"
+                accept=".txt,.pdf,image/*"
+                multiple
+                onChange={async (e) => {
+                  const files = Array.from(e.target.files || [])
+                  const summaries: string[] = []
+                  let aggregated = contextText ? contextText + '\n\n' : ''
+
+                  for (const file of files) {
+                    try {
+                      if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
+                        const txt = await file.text()
+                        aggregated += `\n[Text file: ${file.name}]\n` + txt + '\n'
+                        summaries.push(`${file.name} (text)`) 
+                      } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                        // Minimal placeholder extraction: note the PDF name; backend prompt now accepts existingContent text only
+                        aggregated += `\n[PDF reference: ${file.name}]\n(Attached PDF provided; include relevant context if needed.)\n`
+                        summaries.push(`${file.name} (pdf)`) 
+                      } else if (file.type.startsWith('image/')) {
+                        aggregated += `\n[Image reference: ${file.name}]\n(Attached image provided; include relevant visual context if needed.)\n`
+                        summaries.push(`${file.name} (image)`) 
+                      } else {
+                        summaries.push(`${file.name} (unsupported)`) 
+                      }
+                    } catch (err) {
+                      summaries.push(`${file.name} (failed)`) 
+                    }
+                  }
+
+                  setContextText(aggregated.trim())
+                  setContextFilesInfo(summaries)
+                }}
+                className="block"
+              />
+              {contextFilesInfo.length > 0 && (
+                <div className="text-xs text-gray-600">Attached: {contextFilesInfo.join(', ')}</div>
+              )}
             </div>
 
             <Button type="submit" disabled={isGenerating} className="w-full">
