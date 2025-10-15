@@ -51,7 +51,8 @@ export function ContentGenerator() {
     grade: '',
     customPrompt: '',
     language: 'English',
-    country: ''
+    country: '',
+    temperature: 1
   })
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [states, setStates] = useState<StateData[]>([])
@@ -786,6 +787,25 @@ export function ContentGenerator() {
                 </Select>
               </div>
 
+              <div>
+                <Label htmlFor="temperature">Creativity (Temperature)</Label>
+                <div className="flex items-center gap-3">
+                  <input
+                    id="temperature"
+                    type="range"
+                    min={0}
+                    max={2}
+                    step={0.1}
+                    value={formData.temperature}
+                    onChange={(e) => setFormData({ ...formData, temperature: Number(e.target.value) })}
+                    className="w-full"
+                  />
+                  <span className="text-sm w-10 text-right">{formData.temperature.toFixed(1)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="country">Country (Optional)</Label>
                 <Select

@@ -93,7 +93,8 @@ export function ContentLibrary() {
     language: 'English',
     country: '',
     customPrompt: '',
-    provider: 'openai'
+    provider: 'openai',
+    temperature: 1
   })
   
   const [searchQuery, setSearchQuery] = useState('')
@@ -364,7 +365,8 @@ export function ContentLibrary() {
       language: content.language || 'English',
       country: content.country || '',
       customPrompt: '',
-      provider: 'openai'
+      provider: 'openai',
+      temperature: 1
     })
     setShowGenerateModal(true)
     setSelectedContent(null) // Close the view modal
@@ -480,7 +482,8 @@ export function ContentLibrary() {
         language: 'English',
         country: '',
         customPrompt: '',
-        provider: 'openai'
+        provider: 'openai',
+        temperature: 1
       })
       
       // Refresh content list
@@ -1044,6 +1047,24 @@ export function ContentLibrary() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <Label>Creativity (Temperature)</Label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={0}
+                      max={2}
+                      step={0.1}
+                      value={generateForm.temperature}
+                      onChange={(e) => setGenerateForm({ ...generateForm, temperature: Number(e.target.value) })}
+                      className="w-full"
+                    />
+                    <span className="text-sm w-10 text-right">{generateForm.temperature.toFixed(1)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Country (Optional)</Label>
                   <Select

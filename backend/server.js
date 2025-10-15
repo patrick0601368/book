@@ -277,7 +277,7 @@ app.post('/api/auth/login', async (req, res) => {
 // Generate content
 app.post('/api/generate-content', authenticateToken, async (req, res) => {
   try {
-    const { type, subject, topic, difficulty, provider = 'openai', customPrompt, state, schoolType, grade, language = 'English', country } = req.body;
+    const { type, subject, topic, difficulty, provider = 'openai', customPrompt, state, schoolType, grade, language = 'English', country, existingContent, temperature } = req.body;
 
     let prompt = '';
 
@@ -356,12 +356,22 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
         return res.status(400).json({ error: 'Invalid content type' });
     }
 
+    // Add existing content context if provided
+    if (existingContent && String(existingContent).trim()) {
+      prompt += `\n\nExisting content (for reference only, do not copy verbatim):\n\n${existingContent}`;
+    }
+
     // Add custom prompt if provided
     if (customPrompt && customPrompt.trim()) {
       prompt += `\n\nAdditional instructions: ${customPrompt}`;
     }
 
     let content = '';
+
+    // Clamp temperature between 0 and 2; default 0.7
+    const safeTemperature = typeof temperature === 'number' && !isNaN(temperature)
+      ? Math.min(2, Math.max(0, temperature))
+      : 0.7;
 
     if (provider === 'mistral') {
       // Use Mistral AI
@@ -383,7 +393,7 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
           }
         ],
         max_tokens: 3500,
-        temperature: 0.7,
+        temperature: safeTemperature,
       }, {
         headers: {
           'Content-Type': 'application/json',
@@ -418,7 +428,7 @@ app.post('/api/generate-content', authenticateToken, async (req, res) => {
           }
         ],
         max_tokens: 3500,
-        temperature: 0.7,
+        temperature: safeTemperature,
       });
 
       content = completion.choices[0]?.message?.content || '';

@@ -88,6 +88,10 @@ export class ApiClient {
     state?: string;
     schoolType?: string;
     grade?: string;
+    language?: string;
+    country?: string;
+    existingContent?: string;
+    temperature?: number;
   }) {
     return this.request('/api/generate-content', {
       method: 'POST',
